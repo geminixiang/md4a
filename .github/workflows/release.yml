@@ -65,11 +65,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: Install XcodeGen
+        run: brew install xcodegen
       - name: Build Simulator target
         run: |
+          cd platform/apple
+          xcodegen generate
           VERSION="${GITHUB_REF_NAME#v}"
           if [[ "$GITHUB_REF_TYPE" != "tag" ]]; then VERSION="0.0.0-dev"; fi
-          xcodebuild -project platform/apple/md4a.xcodeproj -scheme md4aiOS \
+          xcodebuild -project md4a.xcodeproj -scheme md4aiOS \
             -configuration Release -sdk iphonesimulator \
             -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath "$RUNNER_TEMP/md4a-ios" \
@@ -183,6 +187,8 @@ jobs:
     needs: [core, macos, ios-check, android, windows, linux]
     permissions:
       contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -200,8 +206,6 @@ jobs:
             -f tag_name="$GITHUB_REF_NAME" \
             --jq .body >> "$RUNNER_TEMP/release-notes.md"
       - name: Publish
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           args=("${GITHUB_REF_NAME}" release/* --repo "${GITHUB_REPOSITORY}" --title "md4a ${GITHUB_REF_NAME}" --notes-file "$RUNNER_TEMP/release-notes.md" --verify-tag)
           if [[ "$GITHUB_REF_NAME" == *-* ]]; then args+=(--prerelease); fi

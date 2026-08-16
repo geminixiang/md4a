@@ -182,6 +182,11 @@ private fun Preview(markdown: String) {
                 }
             }
         },
-        update = { webView -> webView.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null) },
+        update = { webView ->
+            if (webView.tag != html) {
+                webView.tag = html
+                webView.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null)
+            }
+        },
     )
 }
