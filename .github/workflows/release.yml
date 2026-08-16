@@ -185,6 +185,7 @@ jobs:
       contents: write
     runs-on: ubuntu-24.04
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           path: release
@@ -192,10 +193,16 @@ jobs:
       - name: Create checksums
         working-directory: release
         run: sha256sum * > SHA256SUMS.txt
+      - name: Prepare release notes
+        run: |
+          cp .github/release-notes.md "$RUNNER_TEMP/release-notes.md"
+          gh api "repos/${GITHUB_REPOSITORY}/releases/generate-notes" \
+            -f tag_name="$GITHUB_REF_NAME" \
+            --jq .body >> "$RUNNER_TEMP/release-notes.md"
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          args=("${GITHUB_REF_NAME}" release/* --repo "${GITHUB_REPOSITORY}" --generate-notes --verify-tag)
+          args=("${GITHUB_REF_NAME}" release/* --repo "${GITHUB_REPOSITORY}" --title "md4a ${GITHUB_REF_NAME}" --notes-file "$RUNNER_TEMP/release-notes.md" --verify-tag)
           if [[ "$GITHUB_REF_NAME" == *-* ]]; then args+=(--prerelease); fi
           gh release create "${args[@]}"
