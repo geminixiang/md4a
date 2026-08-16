@@ -130,7 +130,9 @@ jobs:
       - uses: microsoft/setup-msbuild@v2
       - name: Build app
         shell: pwsh
-        run: msbuild platform/windows/md4a-windows.sln /restore /m /p:Configuration=Release /p:Platform=x64
+        run: |
+          msbuild platform/windows/Md4aCore.vcxproj /m /p:Configuration=Release /p:Platform=x64
+          msbuild platform/windows/Md4a.Windows.vcxproj /restore /m /p:Configuration=Release /p:Platform=x64 /p:BuildProjectReferences=false
       - name: Package app
         shell: pwsh
         run: |

@@ -27,6 +27,7 @@ struct PreviewWebView: UIViewRepresentable {
 }
 #endif
 
+@MainActor
 final class PreviewCoordinator: NSObject, WKNavigationDelegate {
     var markdown: String?
 
@@ -48,6 +49,7 @@ final class PreviewCoordinator: NSObject, WKNavigationDelegate {
     }
 }
 
+@MainActor
 private func makeWebView(coordinator: PreviewCoordinator) -> WKWebView {
     let configuration = WKWebViewConfiguration()
     configuration.defaultWebpagePreferences.allowsContentJavaScript = false
@@ -56,6 +58,7 @@ private func makeWebView(coordinator: PreviewCoordinator) -> WKWebView {
     return webView
 }
 
+@MainActor
 private func update(_ webView: WKWebView, markdown: String, coordinator: PreviewCoordinator) {
     guard coordinator.markdown != markdown else { return }
     coordinator.markdown = markdown
