@@ -1,0 +1,1 @@
+-keep class app.md4a.NativeRenderer { *; }

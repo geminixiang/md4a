@@ -1,0 +1,16 @@
+# Build output
+/build/
+/out/
+
+# Native IDE state
+.DS_Store
+*.xcuserstate
+xcuserdata/
+.idea/
+.gradle/
+.cxx/
+.vs/
+
+# Generated platform output
+platform/android/app/build/
+platform/apple/DerivedData/
