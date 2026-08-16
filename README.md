@@ -32,7 +32,7 @@ cmake --build build
 ctest --test-dir build --output-on-failure
 ```
 
-Platform projects are deliberately independent because their native SDKs and packaging tools differ. See each platform directory for prerequisites and commands.
+Platform projects are deliberately independent because their native SDKs and packaging tools differ. See each platform directory for prerequisites and commands. Tagged builds and unsigned release artifacts are documented in [`docs/releases.md`](docs/releases.md).
 
 ## Extension safety
 

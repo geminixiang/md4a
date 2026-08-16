@@ -12,8 +12,8 @@ android {
         applicationId = "app.md4a"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = System.getenv("MD4A_VERSION_CODE")?.toIntOrNull() ?: 1
+        versionName = System.getenv("MD4A_VERSION_NAME") ?: "0.1.0"
 
         externalNativeBuild {
             cmake {
