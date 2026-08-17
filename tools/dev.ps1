@@ -96,7 +96,7 @@ switch ("${Platform}:${Action}") {
         if ($LASTEXITCODE -ne 0) { Fail "Windows NuGet restore failed." }
         $RequiredImports = @(
             "platform/windows/packages/Microsoft.Windows.CppWinRT.2.0.221104.6/build/native/Microsoft.Windows.CppWinRT.props",
-            "platform/windows/packages/Microsoft.Windows.SDK.BuildTools.10.0.22621.756/build/native/Microsoft.Windows.SDK.BuildTools.props",
+            "platform/windows/packages/Microsoft.Windows.SDK.BuildTools.10.0.22621.756/build/Microsoft.Windows.SDK.BuildTools.props",
             "platform/windows/packages/Microsoft.WindowsAppSDK.1.5.240311000/build/native/Microsoft.WindowsAppSDK.props"
         )
         foreach ($Import in $RequiredImports) {
