@@ -5,7 +5,9 @@ A native Kotlin Android application for opening, creating, editing, previewing, 
 ## Native stack
 
 - Kotlin and one Android `ComponentActivity`.
-- Jetpack Compose with Material 3 controls.
+- Jetpack Compose with Material 3 controls and an MIT, repository-owned virtualized text editor.
+- A persistent piece-tree document session: interactive edits, selection, and undo/redo do not flatten the full document.
+- `LargeDocumentView` renders only visible plain-text lines and integrates directly with Android IME and clipboard APIs.
 - Storage Access Framework (`OpenDocument` / `CreateDocument`) for document access; no broad storage permission.
 - Android WebView for a local, non-JavaScript preview.
 - Android NDK/CMake plus a narrow UTF-8 JNI adapter to the repository's `md4a`/md4c C sources.
@@ -41,3 +43,5 @@ On Windows use `gradlew.bat`. Set `sdk.dir` in an untracked `local.properties` w
 ## Behavior
 
 The single screen starts with an editable new document. **Open** uses Android's system document picker, **Save** overwrites the current document URI or asks for a new one, and **Preview** renders through md4a over JNI into a locked-down WebView. Android document URIs are the only file authority used by the app.
+
+Open and save run away from the UI thread. UTF-8 input and original CRLF sequences are retained. Save streams an immutable piece-tree snapshot and clears dirty state only when the exact revision written is still current. Preview also captures an immutable snapshot; the complete Markdown string is created only at the existing JNI boundary, never for each key press. Switching between Edit and Preview retains the editor session and selection. There is no document-size gate or reduced large-file editing mode.

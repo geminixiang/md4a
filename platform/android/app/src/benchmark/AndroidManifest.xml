@@ -1,0 +1,13 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <activity
+            android:name="app.md4a.benchmark.BenchmarkActivity"
+            android:exported="true"
+            android:screenOrientation="portrait" />
+        <provider
+            android:name="app.md4a.benchmark.BenchmarkDocumentProvider"
+            android:authorities="app.md4a.benchmark.documents"
+            android:exported="true"
+            android:grantUriPermissions="true" />
+    </application>
+</manifest>

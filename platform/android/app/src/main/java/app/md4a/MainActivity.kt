@@ -2,7 +2,10 @@ package app.md4a
 
 import android.content.Intent
 import android.os.Bundle
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -14,7 +17,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -31,53 +34,63 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import android.webkit.WebView
-import android.webkit.WebViewClient
 import androidx.lifecycle.viewmodel.compose.viewModel
+import app.md4a.editor.EditListener
+import app.md4a.editor.HistoryRequestListener
+import app.md4a.editor.LargeDocumentView
+import app.md4a.editor.SessionSnapshot
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
-    private val document: DocumentViewModel by viewModels()
+    internal val document: DocumentViewModel by viewModels()
+    internal var showingPreview by mutableStateOf(false)
+        private set
+
+    internal fun showPreviewForTest(value: Boolean) {
+        showingPreview = value
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (savedInstanceState == null) {
-            intent.data?.let { document.open(contentResolver, it) }
-        }
-        setContent {
-            MaterialTheme {
-                MarkdownScreen(document)
-            }
-        }
+        document.initialize(contentResolver, intent.data)
+        setContent { MaterialTheme { MarkdownScreen(document) } }
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        if (document.isDirty) {
+        val uri = intent.data ?: return
+        if (document.isRestoring) {
+            document.queueLaunchUri(uri)
+        } else if (document.isDirty) {
             document.reportError("Save or discard the current edits before opening another document")
         } else {
-            intent.data?.let { document.open(contentResolver, it) }
+            document.open(contentResolver, uri)
         }
     }
+}
+
+private sealed interface PendingReplacement {
+    data object New : PendingReplacement
+    data object Exit : PendingReplacement
+    data class Open(val uri: android.net.Uri) : PendingReplacement
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MarkdownScreen(document: DocumentViewModel = viewModel()) {
     val context = LocalContext.current
-    var preview by remember { mutableStateOf(false) }
-    var pendingOpenUri by remember { mutableStateOf<android.net.Uri?>(null) }
-    var confirmDiscard by remember { mutableStateOf(false) }
+    val activity = context as? MainActivity
+    var pendingReplacement by remember { mutableStateOf<PendingReplacement?>(null) }
+    val preview = activity?.showingPreview ?: false
     val snackbar = remember { SnackbarHostState() }
-    val openDocument = rememberLauncherForActivityResult(
-        ActivityResultContracts.OpenDocument(),
-    ) { uri ->
+    val openDocument = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let {
             try {
                 context.contentResolver.takePersistableUriPermission(
@@ -85,19 +98,31 @@ private fun MarkdownScreen(document: DocumentViewModel = viewModel()) {
                     Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
                 )
             } catch (_: SecurityException) {
-                // Some document providers grant access only for this app session.
+                // Some providers grant access only for this app session.
             }
-            if (document.isDirty) {
-                pendingOpenUri = it
-                confirmDiscard = true
-            } else {
-                document.open(context.contentResolver, it)
-            }
+            if (document.isDirty) pendingReplacement = PendingReplacement.Open(it)
+            else document.open(context.contentResolver, it)
         }
     }
     val createDocument = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("text/markdown"),
     ) { uri -> uri?.let { document.save(context.contentResolver, it) } }
+
+    LaunchedEffect(document.pendingLaunchUri, document.isRestoring) {
+        val uri = document.pendingLaunchUri
+        if (!document.isRestoring && uri != null) pendingReplacement = PendingReplacement.Open(uri)
+    }
+
+    BackHandler(enabled = document.isDirty) {
+        pendingReplacement = PendingReplacement.Exit
+    }
+
+    LaunchedEffect(pendingReplacement, document.isDirty, document.isSaving) {
+        if (pendingReplacement == PendingReplacement.Exit && !document.isDirty && !document.isSaving) {
+            pendingReplacement = null
+            activity?.finish()
+        }
+    }
 
     LaunchedEffect(document.errorMessage) {
         document.errorMessage?.let {
@@ -106,27 +131,38 @@ private fun MarkdownScreen(document: DocumentViewModel = viewModel()) {
         }
     }
 
-    if (confirmDiscard) {
-        androidx.compose.material3.AlertDialog(
-            onDismissRequest = {
-                confirmDiscard = false
-                pendingOpenUri = null
-            },
+    pendingReplacement?.let { pending ->
+        AlertDialog(
+            onDismissRequest = { pendingReplacement = null },
             title = { Text("Discard unsaved changes?") },
-            text = { Text("Opening another document will replace the current edits.") },
+            text = { Text(if (pending == PendingReplacement.Exit) "Save the document or discard your edits before leaving." else "This will replace the current edits.") },
             confirmButton = {
-                TextButton(onClick = {
-                    pendingOpenUri?.let { document.open(context.contentResolver, it) }
-                    pendingOpenUri = null
-                    confirmDiscard = false
-                }) { Text("Discard and Open") }
+                Row {
+                    if (pending == PendingReplacement.Exit && document.documentUri != null) {
+                        TextButton(
+                            enabled = !document.isSaving,
+                            onClick = { document.save(context.contentResolver, document.documentUri!!) },
+                        ) { Text("Save") }
+                    }
+                    TextButton(onClick = {
+                        when (pending) {
+                            PendingReplacement.New -> document.newDocument()
+                            PendingReplacement.Exit -> {
+                                document.discardRecoveryDraft()
+                                activity?.finish()
+                            }
+                            is PendingReplacement.Open -> document.open(context.contentResolver, pending.uri)
+                        }
+                        document.consumePendingLaunchUri()
+                        activity?.showPreviewForTest(false)
+                        pendingReplacement = null
+                    }) { Text("Discard") }
+                }
             },
-            dismissButton = {
-                TextButton(onClick = {
-                    pendingOpenUri = null
-                    confirmDiscard = false
-                }) { Text("Cancel") }
-            },
+            dismissButton = { TextButton(onClick = {
+                document.consumePendingLaunchUri()
+                pendingReplacement = null
+            }) { Text("Cancel") } },
         )
     }
 
@@ -136,43 +172,46 @@ private fun MarkdownScreen(document: DocumentViewModel = viewModel()) {
             TopAppBar(
                 title = { Text((if (document.isDirty) "• " else "") + document.title) },
                 actions = {
-                    TextButton(onClick = { openDocument.launch(arrayOf("text/markdown", "text/plain")) }) { Text("Open") }
-                    TextButton(onClick = {
-                        document.documentUri?.let { document.save(context.contentResolver, it) }
-                            ?: createDocument.launch(document.title)
-                    }) { Text("Save") }
+                    TextButton(
+                        onClick = {
+                            if (document.isDirty) pendingReplacement = PendingReplacement.New
+                            else { document.newDocument(); activity?.showPreviewForTest(false) }
+                        },
+                        enabled = !document.isLoading && !document.isSaving,
+                    ) { Text("New") }
+                    TextButton(
+                        onClick = { openDocument.launch(arrayOf("text/markdown", "text/plain")) },
+                        enabled = !document.isLoading && !document.isSaving,
+                    ) { Text("Open") }
+                    TextButton(
+                        onClick = {
+                            document.documentUri?.let { document.save(context.contentResolver, it) }
+                                ?: createDocument.launch(document.title)
+                        },
+                        enabled = !document.isLoading && !document.isSaving,
+                    ) { Text(if (document.isSaving) "Saving…" else "Save") }
                 },
             )
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
-            Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                val showingPreview = preview || !document.isEditable
-                Button(onClick = { preview = false }, enabled = showingPreview && document.isEditable) { Text("Edit") }
-                Button(onClick = { preview = true }, enabled = !showingPreview) { Text("Preview") }
-                if (!document.isEditable) {
-                    Text(
-                        "Large document · viewing unavailable",
-                        modifier = Modifier.padding(vertical = 12.dp),
-                        style = MaterialTheme.typography.labelMedium,
-                    )
-                }
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Button(onClick = { activity?.showPreviewForTest(false) }, enabled = preview && !document.isLoading) { Text("Edit") }
+                Button(onClick = { activity?.showPreviewForTest(true) }, enabled = !preview && !document.isLoading) { Text("Preview") }
             }
             Box(Modifier.fillMaxSize().padding(12.dp)) {
-                if (!document.isEditable) {
-                    Box(Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
-                        Text("This document is too large to edit or preview safely, but it was opened successfully.")
+                when {
+                    document.isRestoring -> LoadingMessage("Recovering unsaved document…")
+                    document.isLoading -> LoadingMessage("Opening document…")
+                    preview -> {
+                        val revision = document.observedRevision
+                        val snapshot = remember(document.session, revision) { document.previewSnapshot() }
+                        Preview(snapshot)
                     }
-                } else if (preview) {
-                    Preview(document.markdown)
-                } else {
-                    BasicTextField(
-                        value = document.markdown,
-                        onValueChange = document::edit,
-                        modifier = Modifier.fillMaxSize(),
-                        textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onBackground),
-                        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                    )
+                    else -> Editor(document)
                 }
             }
         }
@@ -180,13 +219,39 @@ private fun MarkdownScreen(document: DocumentViewModel = viewModel()) {
 }
 
 @Composable
-private fun Preview(markdown: String) {
-    var html by remember(markdown) { mutableStateOf<String?>(null) }
-    var renderError by remember(markdown) { mutableStateOf<String?>(null) }
+private fun Editor(document: DocumentViewModel) {
+    // Read this small revision state so the title/dirty state and history redraw stay observable.
+    document.observedRevision
+    val textColor = MaterialTheme.colorScheme.onBackground.toArgb()
+    val accentColor = MaterialTheme.colorScheme.primary.toArgb()
+    val selectionColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f).toArgb()
+    AndroidView(
+        modifier = Modifier.fillMaxSize(),
+        factory = { context -> LargeDocumentView(context) },
+        update = { view ->
+            view.setDocument(document.session)
+            view.onEdit = EditListener { _, _, _ -> document.documentEdited() }
+            view.onUndo = HistoryRequestListener { document.undo() }
+            view.onRedo = HistoryRequestListener { document.redo() }
+            view.updateColors(textColor, accentColor, selectionColor)
+        },
+        onRelease = { it.clearDocument() },
+    )
+}
 
-    LaunchedEffect(markdown) {
+@Composable
+private fun Preview(snapshot: SessionSnapshot) {
+    var html by remember(snapshot.revision, snapshot.document) { mutableStateOf<String?>(null) }
+    var renderError by remember(snapshot.revision, snapshot.document) { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(snapshot.revision, snapshot.document) {
+        html = null
+        renderError = null
         val result = withContext(Dispatchers.Default) {
-            runCatching { previewDocument(NativeRenderer.render(markdown)) }
+            runCatching {
+                // JNI currently accepts String; this is the one explicit full-document render seam.
+                previewDocument(NativeRenderer.render(snapshot.document.toString()))
+            }
         }
         result.fold(
             onSuccess = { html = it },
@@ -194,15 +259,9 @@ private fun Preview(markdown: String) {
         )
     }
 
-    val document = html
-    if (document == null) {
-        Box(Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
-            if (renderError == null) {
-                CircularProgressIndicator()
-            } else {
-                Text("Preview failed: $renderError")
-            }
-        }
+    val rendered = html
+    if (rendered == null) {
+        LoadingMessage(renderError?.let { "Preview failed: $it" } ?: "Rendering preview…", renderError == null)
         return
     }
 
@@ -219,10 +278,26 @@ private fun Preview(markdown: String) {
             }
         },
         update = { webView ->
-            if (webView.tag != document) {
-                webView.tag = document
-                webView.loadDataWithBaseURL(null, document, "text/html", "UTF-8", null)
+            if (webView.tag != snapshot.revision) {
+                webView.tag = snapshot.revision
+                webView.loadDataWithBaseURL(null, rendered, "text/html", "UTF-8", null)
             }
         },
+        onRelease = { webView ->
+            webView.stopLoading()
+            webView.loadUrl("about:blank")
+            webView.removeAllViews()
+            webView.destroy()
+        },
     )
+}
+
+@Composable
+private fun LoadingMessage(message: String, spinning: Boolean = true) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            if (spinning) CircularProgressIndicator()
+            Text(message)
+        }
+    }
 }
