@@ -1,6 +1,7 @@
 # Android Gradle output
 .gradle/
 .idea/
+/build/
 local.properties
 app/build/
 app/.cxx/
