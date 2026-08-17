@@ -10,26 +10,58 @@
 		03D6BCA9355215503A006F45 /* DocumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01143C73DAA97C845DCD60FF /* DocumentView.swift */; };
 		17916D75DA88AD4999060617 /* MarkdownDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4359C648B77E1A86C9D6F1 /* MarkdownDocument.swift */; };
 		19D4C4163CE2717A40993C9E /* md4a.c in Sources */ = {isa = PBXBuildFile; fileRef = 77C1AF5F58AE959890F95640 /* md4a.c */; };
+		1A548835CC0DA940DCDFE35D /* ApplePieceTree.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62C9C1F8493E0E40E99318BF /* ApplePieceTree.swift */; };
 		21FE3C40644BDF059E461D37 /* entity.c in Sources */ = {isa = PBXBuildFile; fileRef = E6CC936185C7BA03E76430D9 /* entity.c */; };
+		4FD7A4BFEAD1C37C20763E7F /* AppleLargeDocumentCoreBenchmarks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F2C3D554D38ED5D0EA55D93 /* AppleLargeDocumentCoreBenchmarks.swift */; };
 		54206969DE4F85598608CDC4 /* MarkdownDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4359C648B77E1A86C9D6F1 /* MarkdownDocument.swift */; };
+		574F2FEE1F92F02849FA29D1 /* NativeDocumentEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08EDAFACD84C0D73507605B /* NativeDocumentEditor.swift */; };
 		5B376BA59BA4A70F5A38864C /* MarkdownTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41BF1E2A73CA4D2E0069EDDD /* MarkdownTests.swift */; };
+		5D5CD586B8813E173B67BFF0 /* AppleLargeDocumentUIBenchmarks.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA260460CEE36B90B007391E /* AppleLargeDocumentUIBenchmarks.swift */; };
 		5EF8F042424F123E2210A08F /* DocumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01143C73DAA97C845DCD60FF /* DocumentView.swift */; };
 		637267286CE320AE1CE98B5D /* md4c-html.c in Sources */ = {isa = PBXBuildFile; fileRef = ED4EBA80105FE131291CD528 /* md4c-html.c */; };
 		70713D590C1FC62AA97E3115 /* MarkdownTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41BF1E2A73CA4D2E0069EDDD /* MarkdownTests.swift */; };
+		70CD3A544304DAD94733D978 /* ApplePieceTreeBenchmarks.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA5657CBFFFBFB29933B4230 /* ApplePieceTreeBenchmarks.swift */; };
+		76BBFCE0E708883174B54093 /* AppleBenchmarkSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D5F81A2E5BA23AA1E1CEE9C /* AppleBenchmarkSupport.swift */; };
+		7D537C51471700E919782D31 /* AppleViewportEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E123285CACE116B26B89603 /* AppleViewportEditor.swift */; };
+		8203F3BF22F7D73FF25C8403 /* AppleDocumentSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = E08B595978782FD5F379BB95 /* AppleDocumentSession.swift */; };
 		857BDC976820909E1589A144 /* md4a.c in Sources */ = {isa = PBXBuildFile; fileRef = 77C1AF5F58AE959890F95640 /* md4a.c */; };
+		870DCB2037E8B5CBE64B4E08 /* AppleLargeDocumentCoreBenchmarks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F2C3D554D38ED5D0EA55D93 /* AppleLargeDocumentCoreBenchmarks.swift */; };
 		8986388EBBAF52E056E1E6A5 /* entity.c in Sources */ = {isa = PBXBuildFile; fileRef = E6CC936185C7BA03E76430D9 /* entity.c */; };
+		9D8FB04AC6D44CEB4BD19535 /* AppleLargeDocumentUIBenchmarks.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA260460CEE36B90B007391E /* AppleLargeDocumentUIBenchmarks.swift */; };
 		A9D7D062ADE207BEF8968EE7 /* md4c-html.c in Sources */ = {isa = PBXBuildFile; fileRef = ED4EBA80105FE131291CD528 /* md4c-html.c */; };
+		B5714A1A65788D46D1A46BED /* AppleViewportEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E123285CACE116B26B89603 /* AppleViewportEditor.swift */; };
+		BA4A3697FAD30C52D715B9A0 /* ApplePieceTree.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62C9C1F8493E0E40E99318BF /* ApplePieceTree.swift */; };
 		C0FC10D455992E9F5BD944BA /* MarkdownRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26587919F672968E15807CD6 /* MarkdownRenderer.swift */; };
 		C4AF0777BD5B8E283E68AD88 /* PreviewWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94F2C8F72236C3AFF0EA2AAA /* PreviewWebView.swift */; };
+		C6856E43B3EE0EF427D4FC96 /* ApplePieceTreeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90B21B738CAFA1AE92048497 /* ApplePieceTreeTests.swift */; };
+		C7166061B202DAE14B56BF71 /* NativeDocumentEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08EDAFACD84C0D73507605B /* NativeDocumentEditor.swift */; };
 		CCCA0F8FE4F0290E3A5E446B /* md4c.c in Sources */ = {isa = PBXBuildFile; fileRef = EB9A4533E6ECF637CE6E4B60 /* md4c.c */; };
 		D07ABAFC52C66466BB434EE8 /* PreviewWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94F2C8F72236C3AFF0EA2AAA /* PreviewWebView.swift */; };
+		D1ACFEE7C741032799B4AF25 /* ApplePieceTreeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90B21B738CAFA1AE92048497 /* ApplePieceTreeTests.swift */; };
 		D36ECF74295E712E51C90ADD /* md4aMacApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EF79B36C754A52299DB73F6 /* md4aMacApp.swift */; };
+		D77500EB9EF3D32C7BC007AE /* ApplePieceTreeBenchmarks.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA5657CBFFFBFB29933B4230 /* ApplePieceTreeBenchmarks.swift */; };
 		DB77643FD0945991F3887AFA /* md4aiOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 981B73E89D1EF4162EE05877 /* md4aiOSApp.swift */; };
 		DE6646FB5089562B2940E9AA /* md4c.c in Sources */ = {isa = PBXBuildFile; fileRef = EB9A4533E6ECF637CE6E4B60 /* md4c.c */; };
+		E88574DB9AADCFAC98857F20 /* AppleDocumentSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = E08B595978782FD5F379BB95 /* AppleDocumentSession.swift */; };
+		F1D80ED30CFE4F47EBCAC350 /* AppleBenchmarkSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D5F81A2E5BA23AA1E1CEE9C /* AppleBenchmarkSupport.swift */; };
 		FB269ADC1ACED2E73F24A808 /* MarkdownRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26587919F672968E15807CD6 /* MarkdownRenderer.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		292AF0411CCDBB113321EBE6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2E21336A0EA683518AC16B7F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FE21585DAD09656D4C6E6B02;
+			remoteInfo = md4aiOS;
+		};
+		ED0C37C66030FA35B5EA7821 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2E21336A0EA683518AC16B7F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B1B9F3223F0028BEB83C764F;
+			remoteInfo = md4aMac;
+		};
 		F30C4F74A66FE9E07A8B64B6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 2E21336A0EA683518AC16B7F /* Project object */;
@@ -50,21 +82,32 @@
 		01143C73DAA97C845DCD60FF /* DocumentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentView.swift; sourceTree = "<group>"; };
 		12710CC180B3183FA0CC6310 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		1585789556403A3A9DAB03C6 /* md4aiOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = md4aiOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1E123285CACE116B26B89603 /* AppleViewportEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleViewportEditor.swift; sourceTree = "<group>"; };
 		1F4359C648B77E1A86C9D6F1 /* MarkdownDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownDocument.swift; sourceTree = "<group>"; };
 		20322A4F72A56D35B3567BDD /* md4aMacTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = md4aMacTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		26587919F672968E15807CD6 /* MarkdownRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownRenderer.swift; sourceTree = "<group>"; };
+		2B89050A4C257A18D1703181 /* md4aiOSBenchmarks.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = md4aiOSBenchmarks.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		41BF1E2A73CA4D2E0069EDDD /* MarkdownTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownTests.swift; sourceTree = "<group>"; };
+		62C9C1F8493E0E40E99318BF /* ApplePieceTree.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplePieceTree.swift; sourceTree = "<group>"; };
+		6D5F81A2E5BA23AA1E1CEE9C /* AppleBenchmarkSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleBenchmarkSupport.swift; sourceTree = "<group>"; };
 		6EF79B36C754A52299DB73F6 /* md4aMacApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = md4aMacApp.swift; sourceTree = "<group>"; };
 		77C1AF5F58AE959890F95640 /* md4a.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = md4a.c; sourceTree = "<group>"; };
+		90B21B738CAFA1AE92048497 /* ApplePieceTreeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplePieceTreeTests.swift; sourceTree = "<group>"; };
 		94F2C8F72236C3AFF0EA2AAA /* PreviewWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewWebView.swift; sourceTree = "<group>"; };
 		981B73E89D1EF4162EE05877 /* md4aiOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = md4aiOSApp.swift; sourceTree = "<group>"; };
+		9F2C3D554D38ED5D0EA55D93 /* AppleLargeDocumentCoreBenchmarks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleLargeDocumentCoreBenchmarks.swift; sourceTree = "<group>"; };
+		AA260460CEE36B90B007391E /* AppleLargeDocumentUIBenchmarks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleLargeDocumentUIBenchmarks.swift; sourceTree = "<group>"; };
+		AC185F6C2CA7B02A8C395AC9 /* md4aMacBenchmarks.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = md4aMacBenchmarks.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C43FFC8D64AA4CE6C621BD80 /* md4aMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = md4aMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C7A7CE3736B9A799AE87A50A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		D08EDAFACD84C0D73507605B /* NativeDocumentEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeDocumentEditor.swift; sourceTree = "<group>"; };
+		E08B595978782FD5F379BB95 /* AppleDocumentSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleDocumentSession.swift; sourceTree = "<group>"; };
 		E6CC936185C7BA03E76430D9 /* entity.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = entity.c; sourceTree = "<group>"; };
 		EB9A4533E6ECF637CE6E4B60 /* md4c.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = md4c.c; sourceTree = "<group>"; };
 		ED4EBA80105FE131291CD528 /* md4c-html.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = "md4c-html.c"; sourceTree = "<group>"; };
 		ED6EDC7D303648919A6DCC2A /* md4a-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "md4a-Bridging-Header.h"; sourceTree = "<group>"; };
 		F13B34A1567FF1DF899B1D1C /* md4aiOSTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = md4aiOSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		FA5657CBFFFBFB29933B4230 /* ApplePieceTreeBenchmarks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplePieceTreeBenchmarks.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -92,8 +135,10 @@
 			isa = PBXGroup;
 			children = (
 				1585789556403A3A9DAB03C6 /* md4aiOS.app */,
+				2B89050A4C257A18D1703181 /* md4aiOSBenchmarks.xctest */,
 				F13B34A1567FF1DF899B1D1C /* md4aiOSTests.xctest */,
 				C43FFC8D64AA4CE6C621BD80 /* md4aMac.app */,
+				AC185F6C2CA7B02A8C395AC9 /* md4aMacBenchmarks.xctest */,
 				20322A4F72A56D35B3567BDD /* md4aMacTests.xctest */,
 			);
 			name = Products;
@@ -111,6 +156,7 @@
 		2CC0A5CEEDCB7C7642A2EDF1 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				90B21B738CAFA1AE92048497 /* ApplePieceTreeTests.swift */,
 				41BF1E2A73CA4D2E0069EDDD /* MarkdownTests.swift */,
 			);
 			path = Tests;
@@ -125,9 +171,21 @@
 			path = iOS;
 			sourceTree = "<group>";
 		};
+		3F5F01952A10C4E2B20B0226 /* BenchmarkTests */ = {
+			isa = PBXGroup;
+			children = (
+				6D5F81A2E5BA23AA1E1CEE9C /* AppleBenchmarkSupport.swift */,
+				9F2C3D554D38ED5D0EA55D93 /* AppleLargeDocumentCoreBenchmarks.swift */,
+				AA260460CEE36B90B007391E /* AppleLargeDocumentUIBenchmarks.swift */,
+				FA5657CBFFFBFB29933B4230 /* ApplePieceTreeBenchmarks.swift */,
+			);
+			path = BenchmarkTests;
+			sourceTree = "<group>";
+		};
 		BC3CE7FF8BDDD4E8DF9DC6C0 = {
 			isa = PBXGroup;
 			children = (
+				3F5F01952A10C4E2B20B0226 /* BenchmarkTests */,
 				302BE064159F368669CC1352 /* iOS */,
 				1DC799663246E4A605C81414 /* macOS */,
 				D3E14C1EA372485413EF63E6 /* Shared */,
@@ -141,10 +199,14 @@
 		D3E14C1EA372485413EF63E6 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				E08B595978782FD5F379BB95 /* AppleDocumentSession.swift */,
+				62C9C1F8493E0E40E99318BF /* ApplePieceTree.swift */,
+				1E123285CACE116B26B89603 /* AppleViewportEditor.swift */,
 				01143C73DAA97C845DCD60FF /* DocumentView.swift */,
 				1F4359C648B77E1A86C9D6F1 /* MarkdownDocument.swift */,
 				26587919F672968E15807CD6 /* MarkdownRenderer.swift */,
 				ED6EDC7D303648919A6DCC2A /* md4a-Bridging-Header.h */,
+				D08EDAFACD84C0D73507605B /* NativeDocumentEditor.swift */,
 				94F2C8F72236C3AFF0EA2AAA /* PreviewWebView.swift */,
 			);
 			path = Shared;
@@ -153,6 +215,42 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		20D458A77966B9BD3430CBB2 /* md4aiOSBenchmarks */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4A75C64FBD929D0A949E7193 /* Build configuration list for PBXNativeTarget "md4aiOSBenchmarks" */;
+			buildPhases = (
+				0FCB7F215850CC38C508731D /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				0047CBBA6E02EAB366AA4947 /* PBXTargetDependency */,
+			);
+			name = md4aiOSBenchmarks;
+			packageProductDependencies = (
+			);
+			productName = md4aiOSBenchmarks;
+			productReference = 2B89050A4C257A18D1703181 /* md4aiOSBenchmarks.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		5AA2A413801B94867FA1516A /* md4aMacBenchmarks */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 61D0662245DA60AFBA74D972 /* Build configuration list for PBXNativeTarget "md4aMacBenchmarks" */;
+			buildPhases = (
+				E752C1F69572DE2FA0A6D3E0 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AC34B4026B1AE4C0944F6E86 /* PBXTargetDependency */,
+			);
+			name = md4aMacBenchmarks;
+			packageProductDependencies = (
+			);
+			productName = md4aMacBenchmarks;
+			productReference = AC185F6C2CA7B02A8C395AC9 /* md4aMacBenchmarks.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		6B97A06CA1C1D5780A0B9EDE /* md4aiOSTests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 5312DA90D294D9F6294F891B /* Build configuration list for PBXNativeTarget "md4aiOSTests" */;
@@ -249,8 +347,10 @@
 			projectRoot = "";
 			targets = (
 				B1B9F3223F0028BEB83C764F /* md4aMac */,
+				5AA2A413801B94867FA1516A /* md4aMacBenchmarks */,
 				DAA4D0D92098B02CE1CD40CD /* md4aMacTests */,
 				FE21585DAD09656D4C6E6B02 /* md4aiOS */,
+				20D458A77966B9BD3430CBB2 /* md4aiOSBenchmarks */,
 				6B97A06CA1C1D5780A0B9EDE /* md4aiOSTests */,
 			);
 		};
@@ -261,7 +361,19 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C6856E43B3EE0EF427D4FC96 /* ApplePieceTreeTests.swift in Sources */,
 				5B376BA59BA4A70F5A38864C /* MarkdownTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0FCB7F215850CC38C508731D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F1D80ED30CFE4F47EBCAC350 /* AppleBenchmarkSupport.swift in Sources */,
+				4FD7A4BFEAD1C37C20763E7F /* AppleLargeDocumentCoreBenchmarks.swift in Sources */,
+				9D8FB04AC6D44CEB4BD19535 /* AppleLargeDocumentUIBenchmarks.swift in Sources */,
+				70CD3A544304DAD94733D978 /* ApplePieceTreeBenchmarks.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -269,9 +381,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8203F3BF22F7D73FF25C8403 /* AppleDocumentSession.swift in Sources */,
+				1A548835CC0DA940DCDFE35D /* ApplePieceTree.swift in Sources */,
+				B5714A1A65788D46D1A46BED /* AppleViewportEditor.swift in Sources */,
 				5EF8F042424F123E2210A08F /* DocumentView.swift in Sources */,
 				54206969DE4F85598608CDC4 /* MarkdownDocument.swift in Sources */,
 				C0FC10D455992E9F5BD944BA /* MarkdownRenderer.swift in Sources */,
+				574F2FEE1F92F02849FA29D1 /* NativeDocumentEditor.swift in Sources */,
 				D07ABAFC52C66466BB434EE8 /* PreviewWebView.swift in Sources */,
 				21FE3C40644BDF059E461D37 /* entity.c in Sources */,
 				857BDC976820909E1589A144 /* md4a.c in Sources */,
@@ -285,9 +401,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E88574DB9AADCFAC98857F20 /* AppleDocumentSession.swift in Sources */,
+				BA4A3697FAD30C52D715B9A0 /* ApplePieceTree.swift in Sources */,
+				7D537C51471700E919782D31 /* AppleViewportEditor.swift in Sources */,
 				03D6BCA9355215503A006F45 /* DocumentView.swift in Sources */,
 				17916D75DA88AD4999060617 /* MarkdownDocument.swift in Sources */,
 				FB269ADC1ACED2E73F24A808 /* MarkdownRenderer.swift in Sources */,
+				C7166061B202DAE14B56BF71 /* NativeDocumentEditor.swift in Sources */,
 				C4AF0777BD5B8E283E68AD88 /* PreviewWebView.swift in Sources */,
 				8986388EBBAF52E056E1E6A5 /* entity.c in Sources */,
 				19D4C4163CE2717A40993C9E /* md4a.c in Sources */,
@@ -301,13 +421,30 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D1ACFEE7C741032799B4AF25 /* ApplePieceTreeTests.swift in Sources */,
 				70713D590C1FC62AA97E3115 /* MarkdownTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E752C1F69572DE2FA0A6D3E0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				76BBFCE0E708883174B54093 /* AppleBenchmarkSupport.swift in Sources */,
+				870DCB2037E8B5CBE64B4E08 /* AppleLargeDocumentCoreBenchmarks.swift in Sources */,
+				5D5CD586B8813E173B67BFF0 /* AppleLargeDocumentUIBenchmarks.swift in Sources */,
+				D77500EB9EF3D32C7BC007AE /* ApplePieceTreeBenchmarks.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		0047CBBA6E02EAB366AA4947 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FE21585DAD09656D4C6E6B02 /* md4aiOS */;
+			targetProxy = 292AF0411CCDBB113321EBE6 /* PBXContainerItemProxy */;
+		};
 		364BBB12833E0D0F5BABD999 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = B1B9F3223F0028BEB83C764F /* md4aMac */;
@@ -318,6 +455,11 @@
 			target = FE21585DAD09656D4C6E6B02 /* md4aiOS */;
 			targetProxy = F70F19EEF60310B0F66B3AE7 /* PBXContainerItemProxy */;
 		};
+		AC34B4026B1AE4C0944F6E86 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B1B9F3223F0028BEB83C764F /* md4aMac */;
+			targetProxy = ED0C37C66030FA35B5EA7821 /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
@@ -326,6 +468,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_TESTABILITY = YES;
 				INFOPLIST_FILE = macOS/Info.plist;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
@@ -444,6 +587,38 @@
 			};
 			name = Debug;
 		};
+		6D19C61EEE4A0CE3A800F330 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = app.md4a.ios.benchmarks;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/md4a.app/md4a";
+			};
+			name = Release;
+		};
+		9397EEBA351D113ACC77FF94 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = app.md4a.macos.benchmarks;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/md4a.app/Contents/MacOS/md4a";
+			};
+			name = Debug;
+		};
 		99DFE1AB8CE93AE295402347 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -465,6 +640,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_TESTABILITY = YES;
 				INFOPLIST_FILE = macOS/Info.plist;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
@@ -484,6 +660,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_TESTABILITY = YES;
 				INFOPLIST_FILE = iOS/Info.plist;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -505,6 +682,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_TESTABILITY = YES;
 				INFOPLIST_FILE = iOS/Info.plist;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -602,14 +780,64 @@
 			};
 			name = Release;
 		};
+		D2258C2974CFFA39C5A225FF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = app.md4a.macos.benchmarks;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/md4a.app/Contents/MacOS/md4a";
+			};
+			name = Release;
+		};
+		FA3E6DE84DF93CDFEE4C7FFD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = app.md4a.ios.benchmarks;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/md4a.app/md4a";
+			};
+			name = Debug;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		4A75C64FBD929D0A949E7193 /* Build configuration list for PBXNativeTarget "md4aiOSBenchmarks" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FA3E6DE84DF93CDFEE4C7FFD /* Debug */,
+				6D19C61EEE4A0CE3A800F330 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		5312DA90D294D9F6294F891B /* Build configuration list for PBXNativeTarget "md4aiOSTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4CF4F0275A58870DEAEDF711 /* Debug */,
 				400A1053FF6E98AEC5118050 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		61D0662245DA60AFBA74D972 /* Build configuration list for PBXNativeTarget "md4aMacBenchmarks" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9397EEBA351D113ACC77FF94 /* Debug */,
+				D2258C2974CFFA39C5A225FF /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

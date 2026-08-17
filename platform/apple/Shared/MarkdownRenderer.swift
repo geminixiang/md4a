@@ -11,10 +11,18 @@ enum MarkdownRenderError: LocalizedError {
 }
 
 enum MarkdownRenderer {
-    static func render(_ markdown: String) throws -> String {
-        let bytes = Array(markdown.utf8)
-        var result = bytes.withUnsafeBytes { buffer in
-            md4a_render(buffer.baseAddress?.assumingMemoryBound(to: CChar.self), buffer.count, nil)
+    /// Renders a complete, self-contained preview page as UTF-8 bytes.
+    ///
+    /// The C API owns its output buffer, so one copy into `Data` is still
+    /// required before `md4a_result_free`. Keeping the page as bytes avoids
+    /// the former C buffer -> Data -> body String -> page String copy chain.
+    static func pageData(for markdown: String) throws -> Data {
+        var result = withUTF8Bytes(of: markdown) { buffer in
+            md4a_render(
+                buffer.baseAddress?.assumingMemoryBound(to: CChar.self),
+                buffer.count,
+                nil
+            )
         }
         defer { md4a_result_free(&result) }
 
@@ -22,21 +30,40 @@ enum MarkdownRenderer {
             let message = result.error.map(String.init(cString:)) ?? "Markdown rendering failed"
             throw MarkdownRenderError.failed(message)
         }
-        let data = Data(bytes: html, count: result.html_size)
-        return String(decoding: data, as: UTF8.self)
+
+        var page = Data()
+        page.reserveCapacity(pageHeader.count + result.html_size + pageFooter.count)
+        page.append(pageHeader)
+        page.append(contentsOf: UnsafeRawBufferPointer(start: html, count: result.html_size))
+        page.append(pageFooter)
+        return page
     }
 
-    static func page(for markdown: String) -> String {
-        let body: String
-        do {
-            body = try render(markdown)
-        } catch {
-            body = "<p class=\"error\">\(escape(error.localizedDescription))</p>"
+    static func render(_ markdown: String) throws -> String {
+        let page = try pageData(for: markdown)
+        let bodyStart = pageHeader.count
+        let bodyEnd = page.count - pageFooter.count
+        return String(decoding: page[bodyStart..<bodyEnd], as: UTF8.self)
+    }
+
+    private static func withUTF8Bytes<Result>(
+        of text: String,
+        _ body: (UnsafeRawBufferPointer) -> Result
+    ) -> Result {
+        if let result = text.utf8.withContiguousStorageIfAvailable({ storage in
+            body(UnsafeRawBufferPointer(storage))
+        }) {
+            return result
         }
-        return pageHeader + body + "</body></html>"
+
+        // Non-contiguous Strings are uncommon here, but Data is a bounded
+        // fallback that avoids allocating an Array<UInt8> plus its storage.
+        let data = Data(text.utf8)
+        return data.withUnsafeBytes(body)
     }
 
-    private static let pageHeader = """
+    private static let pageHeader = Data(
+        """
         <!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1">
         <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'">
         <style>
@@ -89,11 +116,8 @@ enum MarkdownRenderer {
         @media (prefers-color-scheme: dark) { .error { color: #ff6b6b; } }
         @media print { body { max-width: none; padding: 0; } }
         </style></head><body>
-        """
+        """.utf8
+    )
 
-    private static func escape(_ text: String) -> String {
-        text.replacingOccurrences(of: "&", with: "&amp;")
-            .replacingOccurrences(of: "<", with: "&lt;")
-            .replacingOccurrences(of: ">", with: "&gt;")
-    }
+    private static let pageFooter = Data("</body></html>".utf8)
 }

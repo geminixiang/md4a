@@ -1,8 +1,14 @@
 import SwiftUI
 
 struct DocumentView: View {
-    @Binding var document: MarkdownDocument
+    @ObservedObject var document: MarkdownDocument
+    @ObservedObject private var session: AppleDocumentSession
     @State private var mode: DocumentMode = .preview
+
+    init(document: MarkdownDocument) {
+        self.document = document
+        session = document.session
+    }
 
     var body: some View {
         content
@@ -114,18 +120,15 @@ struct DocumentView: View {
     }
 
     private var preview: some View {
-        PreviewWebView(markdown: document.text)
+        PreviewWebView(
+            markdown: session.previewText,
+            revision: session.previewRevision,
+            documentIdentity: document.previewIdentity
+        )
     }
 
     private var editor: some View {
-        TextEditor(text: $document.text)
-            .font(.system(.body, design: .monospaced))
-            .lineSpacing(4)
-            .autocorrectionDisabled()
-            .scrollDismissesKeyboard(.interactively)
-            .scrollContentBackground(.hidden)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+        NativeDocumentEditor(session: session)
             .background(editorBackground)
     }
 

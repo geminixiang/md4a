@@ -31,6 +31,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.md4a.macos
         PRODUCT_MODULE_NAME: md4aMac
+        ENABLE_TESTABILITY: YES
         PRODUCT_NAME: md4a
         INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace: YES
         INFOPLIST_KEY_NSPrincipalClass: NSApplication
@@ -71,6 +72,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.md4a.ios
         PRODUCT_MODULE_NAME: md4aiOS
+        ENABLE_TESTABILITY: YES
         PRODUCT_NAME: md4a
         TARGETED_DEVICE_FAMILY: "1,2"
         INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace: YES
@@ -112,6 +114,19 @@ targets:
         TEST_HOST: "$(BUILT_PRODUCTS_DIR)/md4a.app/Contents/MacOS/md4a"
         BUNDLE_LOADER: "$(TEST_HOST)"
 
+  md4aMacBenchmarks:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - BenchmarkTests
+    dependencies:
+      - target: md4aMac
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.md4a.macos.benchmarks
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/md4a.app/Contents/MacOS/md4a"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+
   md4aiOSTests:
     type: bundle.unit-test
     platform: iOS
@@ -124,3 +139,34 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: app.md4a.ios.tests
         TEST_HOST: "$(BUILT_PRODUCTS_DIR)/md4a.app/md4a"
         BUNDLE_LOADER: "$(TEST_HOST)"
+
+  md4aiOSBenchmarks:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - BenchmarkTests
+    dependencies:
+      - target: md4aiOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.md4a.ios.benchmarks
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/md4a.app/md4a"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+
+schemes:
+  md4aMacBenchmarks:
+    build:
+      targets:
+        md4aMac: all
+        md4aMacBenchmarks: [test]
+    test:
+      targets:
+        - md4aMacBenchmarks
+  md4aiOSBenchmarks:
+    build:
+      targets:
+        md4aiOS: all
+        md4aiOSBenchmarks: [test]
+    test:
+      targets:
+        - md4aiOSBenchmarks

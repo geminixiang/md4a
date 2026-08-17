@@ -4,6 +4,10 @@ Native Swift applications with separate macOS and iOS targets. Both use SwiftUI'
 
 The Apple targets share document, renderer, and preview code only. No Apple UI or application state is shared with another platform.
 
+The Apple apps now use an app-owned incremental piece tree and viewport-only native editor instead of placing the full document in TextKit. On iPhone and iPad, tap places the caret; long-press selects a word, dragging extends the selection, and the standard edit menu provides Copy, Cut, Paste, and Select All. Clipboard operations materialize only the selected range, except an explicit Select All copy as requested by the user.
+
+Preview HTML is written beneath the app cache root in an isolated per-session directory. The pipeline excludes these files from backup, uses complete file protection on iOS, removes stale session directories at startup without touching active sessions, and removes the current session on normal teardown. `WKWebView` receives read access only to the individual HTML file being loaded.
+
 ## Generate and build
 
 From the repository root, use the cross-platform Task interface (Task installation is documented in the root README):

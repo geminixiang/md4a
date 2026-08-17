@@ -33,8 +33,8 @@ Each shell owns platform concerns:
 
 | Platform | UI | Editor | Preview |
 | --- | --- | --- | --- |
-| macOS | SwiftUI + AppKit | native Apple text system | `WKWebView` |
-| iOS | SwiftUI + UIKit | native Apple text system | `WKWebView` |
+| macOS | SwiftUI + AppKit | MIT Piece Tree + viewport-only AppKit view | `WKWebView` |
+| iOS | SwiftUI + UIKit | MIT Piece Tree + viewport-only UIKit view | `WKWebView` |
 | Android | Jetpack Compose | md4a Piece Tree + virtualized `LargeDocumentView` | Android `WebView` |
 | Windows | WinUI 3, C++ | native text editor control | WebView2 |
 | Linux | GTK 4 | `GtkTextView` | WebKitGTK |
@@ -42,6 +42,8 @@ Each shell owns platform concerns:
 A shell loads and saves UTF-8 Documents, debounces edits, invokes the Core renderer off the UI thread, and replaces Preview content on the UI thread. It retains the last successful Preview if rendering fails. Android keeps interactive editing out of whole-document Compose state: its Piece Tree structurally shares unchanged text, its custom View lays out only visible lines, and Save streams a snapshot. The decision and performance contract are recorded in [ADR 0001](adr/0001-android-incremental-virtualized-editor.md) and the [benchmark guide](benchmarks.md).
 
 Android's production editor keeps a persistent piece-tree session as its source of truth and asks the custom `LargeDocumentView` to lay out only visible lines. Edits and undo history therefore operate on ranges rather than replacing a whole Compose `String`. Opening constructs the session on an I/O dispatcher, immutable snapshots make save/render capture O(1), save streams a snapshot directly to the SAF output, and only the JNI Preview boundary materializes a complete `String` because that existing API requires one. CRLF is retained as document content rather than normalized.
+
+Apple uses the same performance invariants with an independent Swift implementation: `ApplePieceTreeBuffer` owns the document, the AppKit/UIKit viewport editor draws only visible no-wrap lines, and Preview/`FileWrapper` are the only full-snapshot seams. Preview renders are serialized and revision-coalesced off the MainActor, then loaded into WebKit through a narrowly scoped cache file. Platform input adapters retain native IME, clipboard, selection and accessibility contracts without assigning the whole document to TextKit.
 
 ### Renderer packages
 
