@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "App.xaml.h"
 #include "Startup.h"
 

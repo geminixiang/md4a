@@ -1,6 +1,7 @@
 #pragma once
 
 #include <windows.h>
+#include <unknwn.h>
 
 #include <winrt/base.h>
 #include <winrt/Microsoft.UI.Xaml.h>
