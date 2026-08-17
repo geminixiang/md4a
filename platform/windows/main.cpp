@@ -25,6 +25,7 @@ using namespace winrt;
 using namespace Microsoft::UI::Xaml;
 using namespace Microsoft::UI::Xaml::Controls;
 using namespace Microsoft::UI::Xaml::Input;
+using namespace Windows::Foundation;
 using namespace Windows::Storage;
 using namespace Windows::Storage::Pickers;
 using namespace Windows::System;
