@@ -70,6 +70,7 @@ jobs:
         with:
           name: android
           path: |
+            out/artifacts/md4a-*-android-debug.apk
             out/artifacts/md4a-*-android-unsigned.apk
             out/artifacts/md4a-*-android-unsigned.aab
           if-no-files-found: error
