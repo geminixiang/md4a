@@ -36,7 +36,7 @@ msbuild .\md4a-windows.sln /restore /p:Configuration=Debug /p:Platform=x64
 
 Or open `md4a-windows.sln` in Visual Studio, allow NuGet package restore, select `x64` or `ARM64`, and build/run `Md4a.Windows`.
 
-This is an unpackaged WinUI 3 application. The Windows App SDK runtime must be installed on the target machine; Visual Studio installs it for development. A release installer and package identity are intentionally outside this minimal scaffold.
+This is an unpackaged WinUI 3 application. The local `task windows:build` command also creates a single-file Inno Setup beta installer that installs the required Windows App Runtime and WebView2 Runtime. The installer is unsigned until production Authenticode signing is configured, so Windows SmartScreen may warn.
 
 ## Current behavior
 

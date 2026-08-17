@@ -109,8 +109,12 @@ switch ("${Platform}:${Action}") {
         if ($LASTEXITCODE -ne 0) { Fail "Windows core build failed." }
         & msbuild platform/windows/Md4a.Windows.vcxproj /m /p:Configuration=Release /p:Platform=x64 /p:BuildProjectReferences=false
         if ($LASTEXITCODE -ne 0) { Fail "Windows app build failed." }
-        $Source = "platform/windows/x64/Release"
-        if (-not (Test-Path $Source)) { Fail "Windows build output not found: $Source" }
+        $Source = "platform/windows/x64/Release/Md4a.Windows"
+        if (-not (Test-Path $Source)) { Fail "Windows app build output not found: $Source" }
+        $RequiredFiles = @("Md4a.Windows.exe", "Md4a.Windows.pri", "Microsoft.WindowsAppRuntime.Bootstrap.dll", "assets/md4a.ico")
+        foreach ($RequiredFile in $RequiredFiles) {
+            if (-not (Test-Path (Join-Path $Source $RequiredFile))) { Fail "Windows runtime file not found: $RequiredFile" }
+        }
         $Stage = "out/stage/windows/md4a-$Version-windows-x64-unpackaged"
         Remove-Item out/stage/windows -Recurse -Force -ErrorAction SilentlyContinue
         New-Item -ItemType Directory -Force $Stage, out/artifacts | Out-Null
@@ -118,7 +122,24 @@ switch ("${Platform}:${Action}") {
         $Output = "$Root/out/artifacts/md4a-$Version-windows-x64-unpackaged.zip"
         Remove-Item $Output -Force -ErrorAction SilentlyContinue
         Compress-Archive -Path "$Stage/*" -DestinationPath $Output
-        Show-Artifact $Output "unsigned unpackaged local-test package"
+        Show-Artifact $Output "unsigned unpackaged diagnostic package"
+
+        Need "iscc" "Inno Setup Compiler is required to create the Windows beta installer. Install it with Chocolatey ('choco install innosetup') and retry."
+        $Download = "$Root/out/build/windows/downloads"
+        New-Item -ItemType Directory -Force $Download | Out-Null
+        $RuntimeInstaller = Join-Path $Download "WindowsAppRuntimeInstall-x64.exe"
+        $WebViewInstaller = Join-Path $Download "MicrosoftEdgeWebview2Setup.exe"
+        if (-not (Test-Path $RuntimeInstaller)) {
+            Invoke-WebRequest "https://aka.ms/windowsappsdk/1.5/latest/windowsappruntimeinstall-x64.exe" -OutFile $RuntimeInstaller
+        }
+        if (-not (Test-Path $WebViewInstaller)) {
+            Invoke-WebRequest "https://go.microsoft.com/fwlink/p/?LinkId=2124703" -OutFile $WebViewInstaller
+        }
+        & iscc "/DAppVersion=$Version" "/DSourceDir=$Root/$Source" "/DOutputDir=$Root/out/artifacts" "/DRuntimeInstaller=$RuntimeInstaller" "/DWebViewInstaller=$WebViewInstaller" platform/windows/md4a.iss
+        if ($LASTEXITCODE -ne 0) { Fail "Windows installer build failed." }
+        $Setup = "$Root/out/artifacts/md4a-$Version-windows-x64-setup.exe"
+        if (-not (Test-Path $Setup)) { Fail "Windows installer output not found: $Setup" }
+        Show-Artifact $Setup "unsigned installable beta; SmartScreen warning expected"
     }
     default { Fail "unsupported command: ${Platform}:${Action}" }
 }

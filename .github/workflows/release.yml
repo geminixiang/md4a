@@ -93,6 +93,9 @@ jobs:
           repo-token: ${{ github.token }}
       - uses: microsoft/setup-msbuild@v2
       - uses: NuGet/setup-nuget@v2
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --yes --no-progress
       - name: Set version
         shell: pwsh
         run: |
@@ -102,7 +105,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: windows
-          path: out/artifacts/md4a-*-windows-x64-unpackaged.zip
+          path: |
+            out/artifacts/md4a-*-windows-x64-setup.exe
+            out/artifacts/md4a-*-windows-x64-unpackaged.zip
           if-no-files-found: error
 
   linux:
