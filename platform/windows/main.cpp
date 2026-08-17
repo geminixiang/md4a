@@ -39,7 +39,7 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
     winrt::Md4a::implementation::App::SetInitialDocumentPath(InitialDocumentPath());
     winrt::init_apartment(winrt::apartment_type::single_threaded);
     md4a::startup::Log("apartment.initialized");
-    Microsoft::UI::Xaml::Application::Start([](auto&&) {
+    winrt::Microsoft::UI::Xaml::Application::Start([](auto&&) {
       md4a::startup::Log("application.start.callback");
       winrt::make<winrt::Md4a::implementation::App>();
     });
