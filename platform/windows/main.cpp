@@ -54,9 +54,12 @@ void RecordDefaultsPrompt() {
 }
 
 fire_and_forget OpenDefaultAppsSettings() {
+  bool opened = false;
   try {
-    co_await Launcher::LaunchUriAsync(Uri(kDefaultAppsUri));
+    opened = co_await Launcher::LaunchUriAsync(Uri(kDefaultAppsUri));
   } catch (...) {
+  }
+  if (!opened) {
     co_await Launcher::LaunchUriAsync(Uri(L"ms-settings:defaultapps"));
   }
 }
@@ -176,7 +179,6 @@ class MainWindow final {
   fire_and_forget PromptForDefaultApp() {
     if (HasAskedAboutDefaults()) co_return;
     RecordDefaultsPrompt();
-    co_await resume_foreground(m_window.DispatcherQueue());
 
     ContentDialog dialog;
     dialog.XamlRoot(m_window.Content().XamlRoot());
