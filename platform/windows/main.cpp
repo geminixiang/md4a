@@ -6,11 +6,15 @@
 #include <string>
 #include <string_view>
 
+#include <winrt/base.h>
 #include <winrt/Microsoft.UI.Xaml.h>
 #include <winrt/Microsoft.UI.Xaml.Controls.h>
+#include <winrt/Microsoft.UI.Xaml.Controls.Primitives.h>
 #include <winrt/Microsoft.UI.Xaml.Input.h>
+#include <winrt/Microsoft.UI.Xaml.Markup.h>
 #include <winrt/Microsoft.UI.Xaml.Media.h>
 #include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Storage.h>
 #include <winrt/Windows.Storage.Pickers.h>
 #include <winrt/Windows.System.h>
@@ -71,7 +75,6 @@ class MainWindow final {
     Grid::SetRow(workspace, 1);
 
     m_editor.AcceptsReturn(true);
-    m_editor.AcceptsTab(true);
     m_editor.TextWrapping(TextWrapping::NoWrap);
     m_editor.FontFamily(Microsoft::UI::Xaml::Media::FontFamily(L"Consolas"));
     m_editor.Padding(ThicknessHelper::FromUniformLength(16));
