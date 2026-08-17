@@ -167,6 +167,26 @@ final class ApplePieceTreeBuffer {
         self.init(text: text, historyLimit: historyLimit, initiallyDirty: initiallyDirty)
     }
 
+    init(
+        snapshot: AppleDocumentSnapshot,
+        revision: UInt64,
+        historyLimit: Int = 100,
+        initiallyDirty: Bool = false
+    ) {
+        precondition(historyLimit >= 0, "historyLimit must not be negative")
+        self.historyLimit = historyLimit
+        root = snapshot.root
+        self.revision = revision
+        nextRevision = revision &+ 1
+        savedRevision = initiallyDirty ? UInt64.max : revision
+        lastEditMetrics = AppleEditMetrics(
+            previousLength: snapshot.length,
+            newLength: snapshot.length,
+            existingCodeUnitsCopied: 0,
+            insertedCodeUnits: 0
+        )
+    }
+
     init(text: String = "", historyLimit: Int = 100, initiallyDirty: Bool = false) {
         precondition(historyLimit >= 0, "historyLimit must not be negative")
         self.historyLimit = historyLimit

@@ -64,7 +64,7 @@ enum MarkdownRenderer {
 
     private static let pageHeader = Data(
         """
-        <!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1">
+        <!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
         <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'">
         <style>
         :root {
@@ -76,7 +76,9 @@ enum MarkdownRenderer {
         html { -webkit-text-size-adjust: 100%; background: Canvas; }
         body {
           max-width: 42rem; margin: 0 auto; padding: 2.5rem 1.5rem 5rem;
+          font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang TC", "PingFang SC", "Hiragino Sans", "Apple SD Gothic Neo", sans-serif;
           font-size: max(1em, 16px); line-height: 1.6; overflow-wrap: break-word;
+          word-break: normal; line-break: auto;
         }
         body > :first-child { margin-top: 0; }
         h1, h2, h3, h4, h5, h6 { font-weight: 600; line-height: 1.25; margin: 1.75em 0 0.6em; }
@@ -95,10 +97,12 @@ enum MarkdownRenderer {
         input[type="checkbox"] { margin: 0 0.5em 0 0; vertical-align: -0.15em; }
         a { text-underline-offset: 2px; text-decoration-thickness: 1px;
             text-decoration-color: color-mix(in srgb, currentColor 35%, transparent); }
-        code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.875em; }
+        code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.875em;
+               word-break: normal; line-break: auto; overflow-wrap: normal; }
         :not(pre) > code { background: var(--chip); border-radius: 5px; padding: 0.12em 0.35em; }
         pre { background: var(--chip); border-radius: 10px; padding: 0.875rem 1rem;
-              margin: 0 0 1.25em; overflow-x: auto; line-height: 1.5; }
+              margin: 0 0 1.25em; overflow-x: auto; line-height: 1.5;
+              white-space: pre; word-break: normal; overflow-wrap: normal; }
         pre code { background: none; border-radius: 0; padding: 0; }
         blockquote { margin: 1.25em 0; padding: 0.1em 0 0.1em 1em; color: var(--secondary);
                      border-left: 3px solid color-mix(in srgb, currentColor 22%, transparent); }

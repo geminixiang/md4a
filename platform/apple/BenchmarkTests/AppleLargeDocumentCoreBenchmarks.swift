@@ -77,8 +77,8 @@ final class AppleLargeDocumentCoreBenchmarks: XCTestCase {
     @MainActor
     func testDocumentOpenSaveReopenScaffolding() throws {
         let opened = MarkdownDocument(text: fixture.text)
-        opened.session.replace(NSRange(location: 0, length: 0), with: "X")
-        let snapshot = opened.session.snapshot().text()
+        opened.session().replace(NSRange(location: 0, length: 0), with: "X")
+        let snapshot = opened.session().snapshot().text()
 
         let data = try XCTUnwrap(snapshot.data(using: .utf8))
         let temporaryURL = FileManager.default.temporaryDirectory

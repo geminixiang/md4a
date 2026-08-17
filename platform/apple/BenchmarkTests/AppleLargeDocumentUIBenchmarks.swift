@@ -70,6 +70,39 @@ final class AppleLargeDocumentUIBenchmarks: XCTestCase {
         AppleBenchmark.logMemory(metric: "viewport_editor_memory", fixture: fixture)
     }
 
+    func testUnicodeHeavyVisibleLayoutAndInput() throws {
+        let unicode = AppleBenchmarkFixture.unicodeHeavy()
+        let session = AppleDocumentSession(text: unicode.text)
+        attachAndLayout(session)
+
+        let layout = AppleBenchmark.measure { layoutViewport(session) }
+        AppleBenchmark.log(
+            metric: "unicode_viewport_layout",
+            summary: layout,
+            fixture: unicode,
+            gateMilliseconds: 100
+        )
+
+        let input = AppleBenchmark.measure {
+            let caret = session.utf16Count
+            session.replace(NSRange(location: caret, length: 0), with: "👍🏽")
+            session.undo()
+        }
+        AppleBenchmark.log(
+            metric: "unicode_grapheme_input",
+            summary: input,
+            fixture: unicode,
+            gateMilliseconds: 100
+        )
+
+        #if os(macOS)
+        let editor = try XCTUnwrap(session.editorView.documentView as? AppleViewportEditorView)
+        #else
+        let editor = session.editorView
+        #endif
+        XCTAssertNotNil(editor)
+    }
+
     func testPreviewPageLoadToDidFinish() async throws {
         let data = try MarkdownRenderer.pageData(for: fixture.text)
         let directory = FileManager.default.temporaryDirectory

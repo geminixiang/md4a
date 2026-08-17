@@ -1,5 +1,6 @@
 import XCTest
 import Combine
+import WebKit
 #if os(macOS)
 @testable import md4aMac
 #else
@@ -16,6 +17,25 @@ final class MarkdownTests: XCTestCase {
     func testRendererHandlesUTF8() throws {
         let html = try MarkdownRenderer.render("# 橘子\n")
         XCTAssertEqual(html, "<h1>橘子</h1>\n")
+    }
+
+    @MainActor
+    func testPreviewWebKitDOMPreservesUnicodeText() async throws {
+        let corpus = "繁體中文 简体中文 日本語 한글 e\u{301} हिन्दी العربية 👨‍👩‍👧‍👦 👍🏽 🇹🇼 ❤️ 1️⃣ ✈️"
+        let page = try MarkdownRenderer.pageData(for: corpus)
+        let directory = FileManager.default.temporaryDirectory.appending(path: "md4a-unicode-dom-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appending(path: "preview.html")
+        try page.write(to: url)
+        let webView = WKWebView(frame: CGRect(x: 0, y: 0, width: 600, height: 400))
+        let observer = UnicodeNavigationObserver()
+        webView.navigationDelegate = observer
+        async let loaded: Void = observer.wait()
+        webView.loadFileURL(url, allowingReadAccessTo: directory)
+        try await loaded
+        let value = try await webView.evaluateJavaScript("document.body.innerText") as? String
+        XCTAssertEqual(value?.trimmingCharacters(in: .whitespacesAndNewlines), corpus)
     }
 
     func testPreviewPipelineCoalescesRequestsAndSuppressesStaleResult() async throws {
@@ -137,42 +157,42 @@ final class MarkdownTests: XCTestCase {
         let changed = expectation(description: "document announced an edit")
         let observation = document.objectWillChange.sink { changed.fulfill() }
 
-        document.session.replace(
-            NSRange(location: document.session.utf16Count, length: 0),
+        document.session().replace(
+            NSRange(location: document.session().utf16Count, length: 0),
             with: "After"
         )
 
         wait(for: [changed], timeout: 1)
-        XCTAssertEqual(document.session.snapshot().text(), "# Before\r\nAfter")
-        XCTAssertEqual(document.session.revision, 1)
+        XCTAssertEqual(document.session().snapshot().text(), "# Before\r\nAfter")
+        XCTAssertEqual(document.session().revision, 1)
         withExtendedLifetime(observation) {}
     }
 
     @MainActor
     func testNativeSessionPreservesUnicodeAndUndo() throws {
         let document = MarkdownDocument(text: "橘子\r\n")
-        document.session.replace(
-            NSRange(location: document.session.utf16Count, length: 0),
+        document.session().replace(
+            NSRange(location: document.session().utf16Count, length: 0),
             with: "🙂"
         )
-        XCTAssertEqual(document.session.snapshot().text(), "橘子\r\n🙂")
-        document.session.undo()
-        XCTAssertEqual(document.session.snapshot().text(), "橘子\r\n")
-        document.session.redo()
-        XCTAssertEqual(document.session.snapshot().text(), "橘子\r\n🙂")
+        XCTAssertEqual(document.session().snapshot().text(), "橘子\r\n🙂")
+        document.session().undo()
+        XCTAssertEqual(document.session().snapshot().text(), "橘子\r\n")
+        document.session().redo()
+        XCTAssertEqual(document.session().snapshot().text(), "橘子\r\n🙂")
     }
 
     @MainActor
     func testProductionSnapshotFileWrapperRoundTripsSurrogateBoundaryWithoutMarkingClean() throws {
         let text = String(repeating: "a", count: 16_383) + "🙂\r\n橘"
         let document = MarkdownDocument(text: text)
-        document.session.replace(NSRange(location: 0, length: 0), with: "!")
-        XCTAssertTrue(document.session.isDirty)
+        document.session().replace(NSRange(location: 0, length: 0), with: "!")
+        XCTAssertTrue(document.session().isDirty)
 
         let snapshot = try document.snapshot(contentType: MarkdownDocument.markdownType)
         let wrapper = try snapshot.fileWrapper()
         XCTAssertEqual(wrapper.regularFileContents, Data(("!" + text).utf8))
-        XCTAssertTrue(document.session.isDirty, "Serialization is not a completed coordinated save")
+        XCTAssertTrue(document.session().isDirty, "Serialization is not a completed coordinated save")
     }
 
     func testSnapshotFileWrapperCanRunOffMainActor() async throws {
@@ -182,6 +202,56 @@ final class MarkdownTests: XCTestCase {
         }
         let bytes = try await Task.detached { try snapshot.fileWrapper().regularFileContents }.value
         XCTAssertEqual(bytes, Data((String(repeating: "a", count: 16_383) + "🙂").utf8))
+    }
+
+    func testDocumentCoreSupportsConcurrentBackgroundSnapshotsAndPublication() async throws {
+        let firstText = String(repeating: "first 橘子\r\n", count: 2_000)
+        let secondText = String(repeating: "second 🙂\n", count: 2_000)
+        let first = try ApplePieceTreeBuffer(data: Data(firstText.utf8))
+        let second = try ApplePieceTreeBuffer(data: Data(secondText.utf8))
+        let firstSnapshot = MarkdownDocumentSnapshot(document: first.snapshot(), revision: 1)
+        let secondSnapshot = MarkdownDocumentSnapshot(document: second.snapshot(), revision: 2)
+        let core = AppleDocumentCore(firstSnapshot)
+
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            for index in 0..<200 {
+                group.addTask {
+                    if index.isMultiple(of: 3) {
+                        core.publish(secondSnapshot)
+                    } else {
+                        let value = core.snapshot()
+                        XCTAssertTrue(value.revision == 1 || value.revision == 2)
+                        let bytes = try value.fileWrapper().regularFileContents
+                        XCTAssertTrue(bytes == Data(firstText.utf8) || bytes == Data(secondText.utf8))
+                    }
+                }
+            }
+            try await group.waitForAll()
+        }
+
+        XCTAssertEqual(core.snapshot().revision, 2)
+    }
+
+    func testDocumentCoresKeepConcurrentDocumentsIsolated() async throws {
+        let alpha = try AppleDocumentCore(data: Data("alpha 橘子".utf8))
+        let beta = try AppleDocumentCore(data: Data("beta 🙂".utf8))
+
+        async let alphaBytes = Task.detached { try alpha.snapshot().fileWrapper().regularFileContents }.value
+        async let betaBytes = Task.detached { try beta.snapshot().fileWrapper().regularFileContents }.value
+
+        let values = try await (alphaBytes, betaBytes)
+        XCTAssertEqual(values.0, Data("alpha 橘子".utf8))
+        XCTAssertEqual(values.1, Data("beta 🙂".utf8))
+    }
+
+    func testDocumentCoreStrictlyRejectsInvalidUTF8OffMainActor() async {
+        let invalid = Data([0xF0, 0x28, 0x8C, 0x28])
+        do {
+            _ = try await Task.detached { try AppleDocumentCore(data: invalid) }.value
+            XCTFail("Invalid UTF-8 unexpectedly opened")
+        } catch {
+            XCTAssertEqual((error as? CocoaError)?.code, .fileReadInapplicableStringEncoding)
+        }
     }
 
     @MainActor
@@ -292,6 +362,25 @@ private final class TestAppleEditorDocument: AppleEditorDocument {
         value = next.0
         editorSelection = next.1
         revision &+= 1
+    }
+}
+
+@MainActor
+private final class UnicodeNavigationObserver: NSObject, WKNavigationDelegate {
+    private var continuation: CheckedContinuation<Void, Error>?
+
+    func wait() async throws {
+        try await withCheckedThrowingContinuation { continuation = $0 }
+    }
+
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        continuation?.resume()
+        continuation = nil
+    }
+
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        continuation?.resume(throwing: error)
+        continuation = nil
     }
 }
 

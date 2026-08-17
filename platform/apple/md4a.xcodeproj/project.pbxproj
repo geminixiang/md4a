@@ -14,6 +14,8 @@
 		1A548835CC0DA940DCDFE35D /* ApplePieceTree.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62C9C1F8493E0E40E99318BF /* ApplePieceTree.swift */; };
 		21FE3C40644BDF059E461D37 /* entity.c in Sources */ = {isa = PBXBuildFile; fileRef = E6CC936185C7BA03E76430D9 /* entity.c */; };
 		2991D09D60DB5EF0CB5F444B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 43B87D31BDF22F96B240D29C /* Assets.xcassets */; };
+		443558FCC7FAEACFD86184CE /* AppleUnicodeEditorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E684320E800E1FA058AD17E7 /* AppleUnicodeEditorTests.swift */; };
+		4F061B741E9B2FB14EA611E6 /* AppleUnicodeEditorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E684320E800E1FA058AD17E7 /* AppleUnicodeEditorTests.swift */; };
 		4FD7A4BFEAD1C37C20763E7F /* AppleLargeDocumentCoreBenchmarks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F2C3D554D38ED5D0EA55D93 /* AppleLargeDocumentCoreBenchmarks.swift */; };
 		54206969DE4F85598608CDC4 /* MarkdownDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4359C648B77E1A86C9D6F1 /* MarkdownDocument.swift */; };
 		574F2FEE1F92F02849FA29D1 /* NativeDocumentEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08EDAFACD84C0D73507605B /* NativeDocumentEditor.swift */; };
@@ -24,6 +26,7 @@
 		70713D590C1FC62AA97E3115 /* MarkdownTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41BF1E2A73CA4D2E0069EDDD /* MarkdownTests.swift */; };
 		70CD3A544304DAD94733D978 /* ApplePieceTreeBenchmarks.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA5657CBFFFBFB29933B4230 /* ApplePieceTreeBenchmarks.swift */; };
 		76BBFCE0E708883174B54093 /* AppleBenchmarkSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D5F81A2E5BA23AA1E1CEE9C /* AppleBenchmarkSupport.swift */; };
+		79B0DFB0E4F767B448004BB0 /* AppleLineLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE15252DBCA36B8BE4BB7FF5 /* AppleLineLayout.swift */; };
 		7D537C51471700E919782D31 /* AppleViewportEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E123285CACE116B26B89603 /* AppleViewportEditor.swift */; };
 		8203F3BF22F7D73FF25C8403 /* AppleDocumentSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = E08B595978782FD5F379BB95 /* AppleDocumentSession.swift */; };
 		857BDC976820909E1589A144 /* md4a.c in Sources */ = {isa = PBXBuildFile; fileRef = 77C1AF5F58AE959890F95640 /* md4a.c */; };
@@ -33,6 +36,7 @@
 		A9D7D062ADE207BEF8968EE7 /* md4c-html.c in Sources */ = {isa = PBXBuildFile; fileRef = ED4EBA80105FE131291CD528 /* md4c-html.c */; };
 		B5714A1A65788D46D1A46BED /* AppleViewportEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E123285CACE116B26B89603 /* AppleViewportEditor.swift */; };
 		BA4A3697FAD30C52D715B9A0 /* ApplePieceTree.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62C9C1F8493E0E40E99318BF /* ApplePieceTree.swift */; };
+		BECDFCF5E05F7C9F1CF07AB5 /* AppleLineLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE15252DBCA36B8BE4BB7FF5 /* AppleLineLayout.swift */; };
 		C0FC10D455992E9F5BD944BA /* MarkdownRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26587919F672968E15807CD6 /* MarkdownRenderer.swift */; };
 		C4AF0777BD5B8E283E68AD88 /* PreviewWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94F2C8F72236C3AFF0EA2AAA /* PreviewWebView.swift */; };
 		C6856E43B3EE0EF427D4FC96 /* ApplePieceTreeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90B21B738CAFA1AE92048497 /* ApplePieceTreeTests.swift */; };
@@ -105,7 +109,9 @@
 		C43FFC8D64AA4CE6C621BD80 /* md4aMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = md4aMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C7A7CE3736B9A799AE87A50A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		D08EDAFACD84C0D73507605B /* NativeDocumentEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeDocumentEditor.swift; sourceTree = "<group>"; };
+		DE15252DBCA36B8BE4BB7FF5 /* AppleLineLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleLineLayout.swift; sourceTree = "<group>"; };
 		E08B595978782FD5F379BB95 /* AppleDocumentSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleDocumentSession.swift; sourceTree = "<group>"; };
+		E684320E800E1FA058AD17E7 /* AppleUnicodeEditorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleUnicodeEditorTests.swift; sourceTree = "<group>"; };
 		E6CC936185C7BA03E76430D9 /* entity.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = entity.c; sourceTree = "<group>"; };
 		EB9A4533E6ECF637CE6E4B60 /* md4c.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = md4c.c; sourceTree = "<group>"; };
 		ED4EBA80105FE131291CD528 /* md4c-html.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = "md4c-html.c"; sourceTree = "<group>"; };
@@ -162,6 +168,7 @@
 			isa = PBXGroup;
 			children = (
 				90B21B738CAFA1AE92048497 /* ApplePieceTreeTests.swift */,
+				E684320E800E1FA058AD17E7 /* AppleUnicodeEditorTests.swift */,
 				41BF1E2A73CA4D2E0069EDDD /* MarkdownTests.swift */,
 			);
 			path = Tests;
@@ -206,6 +213,7 @@
 			isa = PBXGroup;
 			children = (
 				E08B595978782FD5F379BB95 /* AppleDocumentSession.swift */,
+				DE15252DBCA36B8BE4BB7FF5 /* AppleLineLayout.swift */,
 				62C9C1F8493E0E40E99318BF /* ApplePieceTree.swift */,
 				1E123285CACE116B26B89603 /* AppleViewportEditor.swift */,
 				01143C73DAA97C845DCD60FF /* DocumentView.swift */,
@@ -389,6 +397,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C6856E43B3EE0EF427D4FC96 /* ApplePieceTreeTests.swift in Sources */,
+				443558FCC7FAEACFD86184CE /* AppleUnicodeEditorTests.swift in Sources */,
 				5B376BA59BA4A70F5A38864C /* MarkdownTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -409,6 +418,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8203F3BF22F7D73FF25C8403 /* AppleDocumentSession.swift in Sources */,
+				79B0DFB0E4F767B448004BB0 /* AppleLineLayout.swift in Sources */,
 				1A548835CC0DA940DCDFE35D /* ApplePieceTree.swift in Sources */,
 				B5714A1A65788D46D1A46BED /* AppleViewportEditor.swift in Sources */,
 				5EF8F042424F123E2210A08F /* DocumentView.swift in Sources */,
@@ -429,6 +439,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E88574DB9AADCFAC98857F20 /* AppleDocumentSession.swift in Sources */,
+				BECDFCF5E05F7C9F1CF07AB5 /* AppleLineLayout.swift in Sources */,
 				BA4A3697FAD30C52D715B9A0 /* ApplePieceTree.swift in Sources */,
 				7D537C51471700E919782D31 /* AppleViewportEditor.swift in Sources */,
 				03D6BCA9355215503A006F45 /* DocumentView.swift in Sources */,
@@ -449,6 +460,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D1ACFEE7C741032799B4AF25 /* ApplePieceTreeTests.swift in Sources */,
+				4F061B741E9B2FB14EA611E6 /* AppleUnicodeEditorTests.swift in Sources */,
 				70713D590C1FC62AA97E3115 /* MarkdownTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

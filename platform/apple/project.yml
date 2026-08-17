@@ -109,7 +109,9 @@ targets:
     type: bundle.unit-test
     platform: macOS
     sources:
-      - Tests
+      - path: Tests
+        excludes:
+          - verify-macos-document-open.sh
     dependencies:
       - target: md4aMac
     settings:
@@ -135,7 +137,9 @@ targets:
     type: bundle.unit-test
     platform: iOS
     sources:
-      - Tests
+      - path: Tests
+        excludes:
+          - verify-macos-document-open.sh
     dependencies:
       - target: md4aiOS
     settings:

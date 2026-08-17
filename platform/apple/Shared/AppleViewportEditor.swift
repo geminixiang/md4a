@@ -46,6 +46,7 @@ final class AppleEditorInputModel {
     let document: AppleEditorDocument
     private(set) var selection = AppleViewportSelection()
     private(set) var markedRange: NSRange?
+    private(set) var preferredVisualX: CGFloat?
     var didChange: (() -> Void)?
 
     init(document: AppleEditorDocument) {
@@ -87,30 +88,17 @@ final class AppleEditorInputModel {
         if selection.range.length > 0 {
             replaceSelection(with: "")
         } else if selection.range.location > 0 {
-            // Keep a surrogate pair intact. Reading a two-unit window avoids
-            // constructing a Swift String from an isolated low surrogate.
-            let available = min(2, selection.range.location)
-            let preceding = document.text(in: NSRange(
-                location: selection.range.location - available,
-                length: available
-            ))
-            let units = Array(preceding.utf16)
-            let isPair = units.count >= 2
-                && (0xD800...0xDBFF).contains(units[units.count - 2])
-                && (0xDC00...0xDFFF).contains(units[units.count - 1])
-            let length = isPair ? 2 : 1
-            replace(NSRange(location: selection.range.location - length, length: length), with: "", markInsertedText: false)
+            let start = AppleGraphemeBoundary.previous(before: selection.range.location, in: document)
+            replace(NSRange(location: start, length: selection.range.location - start), with: "", markInsertedText: false)
         }
     }
 
     func moveHorizontal(_ delta: Int, extending: Bool = false) {
         let edge = delta < 0 ? selection.range.location : NSMaxRange(selection.range)
-        let destination: Int
-        if delta < 0 {
-            destination = previousBoundary(before: edge)
-        } else {
-            destination = nextBoundary(after: edge)
-        }
+        let destination = delta < 0
+            ? AppleGraphemeBoundary.previous(before: edge, in: document)
+            : AppleGraphemeBoundary.next(after: edge, in: document)
+        preferredVisualX = nil
         if extending {
             let fixed = delta < 0 ? NSMaxRange(selection.range) : selection.range.location
             selection.range = NSRange(location: min(fixed, destination), length: abs(destination - fixed))
@@ -130,15 +118,18 @@ final class AppleEditorInputModel {
         updateSelection(destination: destination, extending: extending)
     }
 
-    func moveVertical(_ lines: Int, extending: Bool = false) {
+    func moveVertical(
+        _ lines: Int,
+        extending: Bool = false,
+        xForOffset: (Int) -> CGFloat,
+        offsetForLineX: (Int, CGFloat) -> Int
+    ) {
         let caret = extending ? NSMaxRange(selection.range) : selection.range.location
         let currentLine = lineContaining(caret)
-        let current = document.lineRange(at: currentLine)
-        let column = max(0, caret - current.location)
+        let x = preferredVisualX ?? xForOffset(caret)
+        preferredVisualX = x
         let destinationLine = min(max(currentLine + lines, 0), max(document.lineCount - 1, 0))
-        let destinationRange = document.lineRange(at: destinationLine)
-        let destination = destinationRange.location + min(column, contentLength(of: destinationRange))
-        updateSelection(destination: destination, extending: extending)
+        updateSelection(destination: offsetForLineX(destinationLine, x), extending: extending)
     }
 
     func undo() {
@@ -170,26 +161,6 @@ final class AppleEditorInputModel {
         document.setEditorSelection(selection.range)
         markedRange = nil
         didChange?()
-    }
-
-    private func previousBoundary(before offset: Int) -> Int {
-        guard offset > 0 else { return 0 }
-        let count = min(2, offset)
-        let units = Array(document.text(in: NSRange(location: offset - count, length: count)).utf16)
-        if units.count >= 2,
-           (0xD800...0xDBFF).contains(units[units.count - 2]),
-           (0xDC00...0xDFFF).contains(units[units.count - 1]) { return offset - 2 }
-        return offset - 1
-    }
-
-    private func nextBoundary(after offset: Int) -> Int {
-        guard offset < document.utf16Count else { return document.utf16Count }
-        let count = min(2, document.utf16Count - offset)
-        let units = Array(document.text(in: NSRange(location: offset, length: count)).utf16)
-        if units.count >= 2,
-           (0xD800...0xDBFF).contains(units[0]),
-           (0xDC00...0xDFFF).contains(units[1]) { return offset + 2 }
-        return offset + 1
     }
 
     private func lineContaining(_ offset: Int) -> Int {
@@ -234,6 +205,7 @@ import AppKit
 final class AppleViewportEditorView: NSView, @preconcurrency NSTextInputClient {
     let model: AppleEditorInputModel
     private let font = NSFont.monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
+    private let layoutCache = AppleVisibleLineLayoutCache(capacity: 128)
     private let inset = CGSize(width: 12, height: 10)
     private lazy var lineHeight = ceil(font.ascender - font.descender + font.leading + 3)
     private var caretVisible = true
@@ -279,12 +251,15 @@ final class AppleViewportEditorView: NSView, @preconcurrency NSTextInputClient {
         dirtyRect.fill()
         let first = max(0, Int((dirtyRect.minY - inset.height) / lineHeight))
         let last = min(model.document.lineCount - 1, Int((dirtyRect.maxY - inset.height) / lineHeight) + 1)
-        guard last >= first else { return }
-        let attributes: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: NSColor.textColor]
-        for line in first...last {
-            let range = model.document.lineRange(at: line)
-            let text = model.document.text(in: range).trimmingCharacters(in: .newlines)
-            (text as NSString).draw(at: NSPoint(x: inset.width, y: inset.height + CGFloat(line) * lineHeight), withAttributes: attributes)
+        guard last >= first, let context = NSGraphicsContext.current?.cgContext else { return }
+        for lineNumber in first...last {
+            let shaped = shapedLine(lineNumber)
+            context.saveGState()
+            context.textMatrix = .identity
+            context.translateBy(x: inset.width, y: inset.height + CGFloat(lineNumber) * lineHeight + font.ascender)
+            context.scaleBy(x: 1, y: -1)
+            CTLineDraw(shaped.line, context)
+            context.restoreGState()
         }
         drawSelection()
         drawCaret()
@@ -310,18 +285,18 @@ final class AppleViewportEditorView: NSView, @preconcurrency NSTextInputClient {
 
     override func mouseUp(with event: NSEvent) { dragAnchor = nil }
 
-    override func moveUp(_ sender: Any?) { model.moveVertical(-1) }
-    override func moveDown(_ sender: Any?) { model.moveVertical(1) }
-    override func moveUpAndModifySelection(_ sender: Any?) { model.moveVertical(-1, extending: true) }
-    override func moveDownAndModifySelection(_ sender: Any?) { model.moveVertical(1, extending: true) }
+    override func moveUp(_ sender: Any?) { moveVertical(-1) }
+    override func moveDown(_ sender: Any?) { moveVertical(1) }
+    override func moveUpAndModifySelection(_ sender: Any?) { moveVertical(-1, extending: true) }
+    override func moveDownAndModifySelection(_ sender: Any?) { moveVertical(1, extending: true) }
     override func moveToBeginningOfLine(_ sender: Any?) { model.moveToLineBoundary(end: false) }
     override func moveToEndOfLine(_ sender: Any?) { model.moveToLineBoundary(end: true) }
     override func moveToBeginningOfLineAndModifySelection(_ sender: Any?) { model.moveToLineBoundary(end: false, extending: true) }
     override func moveToEndOfLineAndModifySelection(_ sender: Any?) { model.moveToLineBoundary(end: true, extending: true) }
-    override func pageUp(_ sender: Any?) { model.moveVertical(-visibleLineCount) }
-    override func pageDown(_ sender: Any?) { model.moveVertical(visibleLineCount) }
-    override func pageUpAndModifySelection(_ sender: Any?) { model.moveVertical(-visibleLineCount, extending: true) }
-    override func pageDownAndModifySelection(_ sender: Any?) { model.moveVertical(visibleLineCount, extending: true) }
+    override func pageUp(_ sender: Any?) { moveVertical(-visibleLineCount) }
+    override func pageDown(_ sender: Any?) { moveVertical(visibleLineCount) }
+    override func pageUpAndModifySelection(_ sender: Any?) { moveVertical(-visibleLineCount, extending: true) }
+    override func pageDownAndModifySelection(_ sender: Any?) { moveVertical(visibleLineCount, extending: true) }
 
     override func moveLeft(_ sender: Any?) { model.moveHorizontal(-1) }
     override func moveRight(_ sender: Any?) { model.moveHorizontal(1) }
@@ -416,16 +391,13 @@ final class AppleViewportEditorView: NSView, @preconcurrency NSTextInputClient {
 
     private func offset(at point: NSPoint) -> Int {
         let line = min(max(Int((point.y - inset.height) / lineHeight), 0), max(model.document.lineCount - 1, 0))
-        let range = model.document.lineRange(at: line)
-        let column = max(0, Int((point.x - inset.width) / max(font.maximumAdvancement.width, 1)))
-        return min(range.location + column, NSMaxRange(range))
+        return shapedLine(line).globalOffset(forX: point.x - inset.width)
     }
 
     private func caretRect(at offset: Int) -> NSRect {
         let line = line(containing: offset)
-        let range = model.document.lineRange(at: line)
-        let column = max(0, offset - range.location)
-        return NSRect(x: inset.width + CGFloat(column) * font.maximumAdvancement.width, y: inset.height + CGFloat(line) * lineHeight, width: 1, height: lineHeight)
+        let x = shapedLine(line).x(forGlobalOffset: offset)
+        return NSRect(x: inset.width + x, y: inset.height + CGFloat(line) * lineHeight, width: 1, height: lineHeight)
     }
 
     private func line(containing offset: Int) -> Int {
@@ -459,13 +431,38 @@ final class AppleViewportEditorView: NSView, @preconcurrency NSTextInputClient {
             let start = max(model.selection.range.location, range.location)
             let end = min(NSMaxRange(model.selection.range), NSMaxRange(range))
             guard end > start else { continue }
+            let shaped = shapedLine(line)
+            let startX = shaped.x(forGlobalOffset: start)
+            let endX = shaped.x(forGlobalOffset: end)
             NSRect(
-                x: inset.width + CGFloat(start - range.location) * font.maximumAdvancement.width,
+                x: inset.width + min(startX, endX),
                 y: inset.height + CGFloat(line) * lineHeight,
-                width: CGFloat(end - start) * font.maximumAdvancement.width,
+                width: max(1, abs(endX - startX)),
                 height: lineHeight
             ).fill()
         }
+    }
+
+    private func shapedLine(_ number: Int) -> AppleShapedLine {
+        layoutCache.layout(
+            line: number,
+            document: model.document,
+            font: font,
+            color: NSColor.textColor.cgColor,
+            appearance: effectiveAppearance.name.rawValue.hashValue
+        )
+    }
+
+    private func moveVertical(_ lines: Int, extending: Bool = false) {
+        model.moveVertical(
+            lines,
+            extending: extending,
+            xForOffset: { [weak self] offset in
+                guard let self else { return 0 }
+                return self.shapedLine(self.line(containing: offset)).x(forGlobalOffset: offset)
+            },
+            offsetForLineX: { [weak self] line, x in self?.shapedLine(line).globalOffset(forX: x) ?? 0 }
+        )
     }
 
     private func drawCaret() {
@@ -510,8 +507,8 @@ final class AppleViewportEditorView: UIScrollView, UITextInput {
     var markedTextStyle: [NSAttributedString.Key: Any]?
 
     private let font = UIFont.monospacedSystemFont(ofSize: UIFont.preferredFont(forTextStyle: .body).pointSize, weight: .regular)
+    private let layoutCache = AppleVisibleLineLayoutCache(capacity: 128)
     private let inset = CGSize(width: 12, height: 10)
-    private lazy var characterWidth = ("M" as NSString).size(withAttributes: [.font: font]).width
     private lazy var lineHeight = ceil(font.lineHeight + 3)
     private var caretVisible = true
     private var caretTimer: Timer?
@@ -562,12 +559,15 @@ final class AppleViewportEditorView: UIScrollView, UITextInput {
         let viewport = CGRect(origin: contentOffset, size: bounds.size).intersection(rect)
         let first = max(0, Int((viewport.minY - inset.height) / lineHeight))
         let last = min(model.document.lineCount - 1, Int((viewport.maxY - inset.height) / lineHeight) + 1)
-        guard last >= first else { return }
-        let attributes: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: UIColor.label]
-        for line in first...last {
-            let range = model.document.lineRange(at: line)
-            let text = model.document.text(in: range).trimmingCharacters(in: .newlines)
-            (text as NSString).draw(at: CGPoint(x: inset.width, y: inset.height + CGFloat(line) * lineHeight), withAttributes: attributes)
+        guard last >= first, let context = UIGraphicsGetCurrentContext() else { return }
+        for lineNumber in first...last {
+            let shaped = shapedLine(lineNumber)
+            context.saveGState()
+            context.textMatrix = .identity
+            context.translateBy(x: inset.width, y: inset.height + CGFloat(lineNumber) * lineHeight + font.ascender)
+            context.scaleBy(x: 1, y: -1)
+            CTLineDraw(shaped.line, context)
+            context.restoreGState()
         }
         drawSelection()
         if caretVisible, model.selection.range.length == 0, isFirstResponder {
@@ -675,8 +675,13 @@ final class AppleViewportEditorView: UIScrollView, UITextInput {
     }
     func position(from position: UITextPosition, offset: Int) -> UITextPosition? {
         guard let start = (position as? AppleUITextPosition)?.offset else { return nil }
-        let result = start + offset
-        return (0...model.document.utf16Count).contains(result) ? AppleUITextPosition(result) : nil
+        var result = start
+        if offset < 0 {
+            for _ in 0..<(-offset) { result = AppleGraphemeBoundary.previous(before: result, in: model.document) }
+        } else {
+            for _ in 0..<offset { result = AppleGraphemeBoundary.next(after: result, in: model.document) }
+        }
+        return AppleUITextPosition(result)
     }
     func position(from position: UITextPosition, in direction: UITextLayoutDirection, offset: Int) -> UITextPosition? {
         let delta = direction == .left || direction == .up ? -offset : offset
@@ -695,8 +700,13 @@ final class AppleViewportEditorView: UIScrollView, UITextInput {
     }
     func characterRange(byExtending position: UITextPosition, in direction: UITextLayoutDirection) -> UITextRange? {
         guard let offset = (position as? AppleUITextPosition)?.offset else { return nil }
-        let start = direction == .left || direction == .up ? max(0, offset - 1) : offset
-        return AppleUITextRange(NSRange(location: start, length: min(1, model.document.utf16Count - start)))
+        let start = direction == .left || direction == .up
+            ? AppleGraphemeBoundary.previous(before: offset, in: model.document)
+            : offset
+        let end = direction == .left || direction == .up
+            ? offset
+            : AppleGraphemeBoundary.next(after: offset, in: model.document)
+        return AppleUITextRange(NSRange(location: start, length: end - start))
     }
     func baseWritingDirection(for position: UITextPosition, in direction: UITextStorageDirection) -> NSWritingDirection { .leftToRight }
     func setBaseWritingDirection(_ writingDirection: NSWritingDirection, for range: UITextRange) {}
@@ -706,8 +716,8 @@ final class AppleViewportEditorView: UIScrollView, UITextInput {
     }
     func caretRect(for position: UITextPosition) -> CGRect {
         let offset = (position as? AppleUITextPosition)?.offset ?? 0
-        let line = line(containing: offset), range = model.document.lineRange(at: line)
-        return CGRect(x: inset.width + CGFloat(max(0, offset - range.location)) * characterWidth,
+        let line = line(containing: offset)
+        return CGRect(x: inset.width + shapedLine(line).x(forGlobalOffset: offset),
                       y: inset.height + CGFloat(line) * lineHeight, width: 2, height: lineHeight)
     }
     func selectionRects(for range: UITextRange) -> [UITextSelectionRect] {
@@ -723,11 +733,14 @@ final class AppleViewportEditorView: UIScrollView, UITextInput {
             let start = max(value.location, lineRange.location)
             let end = min(NSMaxRange(value), NSMaxRange(lineRange))
             guard end > start else { return nil }
+            let shaped = shapedLine(line)
+            let startX = shaped.x(forGlobalOffset: start)
+            let endX = shaped.x(forGlobalOffset: end)
             return AppleUITextSelectionRect(
                 rect: CGRect(
-                    x: inset.width + CGFloat(start - lineRange.location) * characterWidth,
+                    x: inset.width + min(startX, endX),
                     y: inset.height + CGFloat(line) * lineHeight,
-                    width: CGFloat(end - start) * characterWidth,
+                    width: max(1, abs(endX - startX)),
                     height: lineHeight
                 ),
                 containsStart: start == value.location,
@@ -739,7 +752,7 @@ final class AppleViewportEditorView: UIScrollView, UITextInput {
     func closestPosition(to point: CGPoint, within range: UITextRange) -> UITextPosition? { closestPosition(to: point) }
     func characterRange(at point: CGPoint) -> UITextRange? {
         let value = offset(at: point)
-        return AppleUITextRange(NSRange(location: value, length: min(1, model.document.utf16Count - value)))
+        return AppleUITextRange(AppleGraphemeBoundary.range(containing: value, in: model.document))
     }
 
     override var accessibilityValue: String? {
@@ -831,9 +844,17 @@ final class AppleViewportEditorView: UIScrollView, UITextInput {
 
     private func offset(at point: CGPoint) -> Int {
         let line = min(max(Int((point.y - inset.height) / lineHeight), 0), max(model.document.lineCount - 1, 0))
-        let range = model.document.lineRange(at: line)
-        let column = max(0, Int((point.x - inset.width) / max(characterWidth, 1)))
-        return min(range.location + column, NSMaxRange(range))
+        return shapedLine(line).globalOffset(forX: point.x - inset.width)
+    }
+
+    private func shapedLine(_ number: Int) -> AppleShapedLine {
+        layoutCache.layout(
+            line: number,
+            document: model.document,
+            font: font,
+            color: UIColor.label.cgColor,
+            appearance: traitCollection.userInterfaceStyle.rawValue
+        )
     }
 
     private func line(containing offset: Int) -> Int {

@@ -18,6 +18,17 @@ final class AppleDocumentSession: ObservableObject, AppleEditorDocument {
     private(set) lazy var editorView = AppleViewportEditorView(document: self)
     #endif
 
+    init(snapshot: AppleDocumentSnapshot, revision: UInt64 = 0, initiallyDirty: Bool = false) {
+        let buffer = ApplePieceTreeBuffer(
+            snapshot: snapshot,
+            revision: revision,
+            initiallyDirty: initiallyDirty
+        )
+        self.buffer = buffer
+        previewText = snapshot.text()
+        previewRevision = revision
+    }
+
     init(data: Data, initiallyDirty: Bool = false) throws {
         let buffer = try ApplePieceTreeBuffer(data: data, initiallyDirty: initiallyDirty)
         self.buffer = buffer
@@ -100,8 +111,10 @@ final class AppleDocumentSession: ObservableObject, AppleEditorDocument {
     }
 
     private func didEdit() {
+        let revision = buffer.revision
+        let snapshot = buffer.snapshot()
         onEdit?()
-        schedulePreviewSnapshot(revision: buffer.revision, snapshot: buffer.snapshot())
+        schedulePreviewSnapshot(revision: revision, snapshot: snapshot)
     }
 
     private func schedulePreviewSnapshot(revision: UInt64, snapshot: AppleDocumentSnapshot) {

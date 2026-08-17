@@ -14,6 +14,19 @@ struct AppleBenchmarkFixture {
     let text: String
     let source: String
 
+    static func unicodeHeavy() -> AppleBenchmarkFixture {
+        let pattern = Data("繁體中文 简体中文 日本語 한글 e\u{301} हिन्दी العربية 👨‍👩‍👧‍👦 👍🏽 🇹🇼 ❤️ 1️⃣ ✈️\r\n".utf8)
+        var data = Data()
+        data.reserveCapacity(exactByteCount)
+        while data.count + pattern.count <= exactByteCount { data.append(pattern) }
+        data.append(Data(repeating: 0x20, count: exactByteCount - data.count))
+        return AppleBenchmarkFixture(
+            data: data,
+            text: String(decoding: data, as: UTF8.self),
+            source: "deterministic-exact-byte-unicode-heavy"
+        )
+    }
+
     static func load() throws -> AppleBenchmarkFixture {
         if let path = ProcessInfo.processInfo.environment["MD4A_BENCHMARK_FIXTURE"], !path.isEmpty {
             let url = URL(fileURLWithPath: (path as NSString).expandingTildeInPath)

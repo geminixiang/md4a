@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -17,50 +18,92 @@ struct MarkdownDocumentSnapshot: @unchecked Sendable {
     }
 }
 
-/// Reference document whose source of truth is a persistent piece tree.
-/// SwiftUI receives lightweight change notifications for autosave; full UTF-8
-/// materialization occurs only because FileWrapper requires Data at save time.
-@MainActor
-final class MarkdownDocument: @preconcurrency ReferenceFileDocument {
+/// Thread-safe bridge between SwiftUI's background document callbacks and the
+/// main-actor editing session. Values are immutable persistent-tree snapshots,
+/// so reads and publication remain O(1).
+final class AppleDocumentCore: @unchecked Sendable {
+    private let lock = NSLock()
+    private var value: MarkdownDocumentSnapshot
+
+    init(_ value: MarkdownDocumentSnapshot) {
+        self.value = value
+    }
+
+    convenience init(data: Data) throws {
+        let buffer = try ApplePieceTreeBuffer(data: data)
+        self.init(MarkdownDocumentSnapshot(document: buffer.snapshot(), revision: buffer.revision))
+    }
+
+    func snapshot() -> MarkdownDocumentSnapshot {
+        lock.withLock { value }
+    }
+
+    func publish(_ snapshot: MarkdownDocumentSnapshot) {
+        lock.withLock { value = snapshot }
+    }
+}
+
+/// Reference document whose protocol witnesses are deliberately nonisolated:
+/// AppKit opens NSDocument instances on its background opening queue. The live
+/// editor is created only when a DocumentView first requests it on MainActor.
+final class MarkdownDocument: ReferenceFileDocument {
     static let markdownType = UTType(importedAs: "net.daringfireball.markdown", conformingTo: .plainText)
     static let readableContentTypes: [UTType] = [markdownType, .plainText]
     static let writableContentTypes: [UTType] = [markdownType]
 
     typealias Snapshot = MarkdownDocumentSnapshot
 
-    let session: AppleDocumentSession
+    private let core: AppleDocumentCore
+    @MainActor private var sessionStorage: AppleDocumentSession?
     let previewIdentity = UUID()
 
     init(text: String = "# Untitled\n") {
-        session = AppleDocumentSession(text: text)
-        connectAutosaveNotification()
+        let buffer = ApplePieceTreeBuffer(text: text)
+        core = AppleDocumentCore(.init(document: buffer.snapshot(), revision: buffer.revision))
     }
 
     required init(configuration: ReadConfiguration) throws {
         guard let data = configuration.file.regularFileContents else {
             throw CocoaError(.fileReadCorruptFile)
         }
-        session = try AppleDocumentSession(data: data)
-        connectAutosaveNotification()
+        // ApplePieceTreeBuffer performs strict UTF-8 decoding. This initializer
+        // intentionally stays synchronous because ReferenceFileDocument already
+        // invokes it on its document-opening worker queue.
+        core = try AppleDocumentCore(data: data)
+    }
+
+    @MainActor
+    func session() -> AppleDocumentSession {
+        if let sessionStorage { return sessionStorage }
+
+        let initial = core.snapshot()
+        let session = AppleDocumentSession(
+            snapshot: initial.document,
+            revision: initial.revision
+        )
+        session.onEdit = { [weak self, weak session] in
+            guard let self, let session else { return }
+            let current = MarkdownDocumentSnapshot(
+                document: session.snapshot(),
+                revision: session.revision
+            )
+            // Autosave may request a snapshot as soon as change publication is
+            // observed, so publish the immutable revision first.
+            self.core.publish(current)
+            self.objectWillChange.send()
+        }
+        sessionStorage = session
+        return session
     }
 
     func snapshot(contentType: UTType) throws -> MarkdownDocumentSnapshot {
-        MarkdownDocumentSnapshot(document: session.snapshot(), revision: session.revision)
+        core.snapshot()
     }
 
-    nonisolated func fileWrapper(
+    func fileWrapper(
         snapshot: MarkdownDocumentSnapshot,
         configuration: WriteConfiguration
     ) throws -> FileWrapper {
         try snapshot.fileWrapper()
-    }
-
-    private func connectAutosaveNotification() {
-        // ReferenceFileDocument owns the dirty lifecycle: an edit notification
-        // schedules a coordinated write, and SwiftUI clears its dirty state only
-        // after that write succeeds. There is intentionally no eager
-        // `session.markSaved()` in fileWrapper because serialization is not a
-        // successful coordinated write and the protocol has no completion hook.
-        session.onEdit = { [weak self] in self?.objectWillChange.send() }
     }
 }

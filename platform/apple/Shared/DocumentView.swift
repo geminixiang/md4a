@@ -7,7 +7,7 @@ struct DocumentView: View {
 
     init(document: MarkdownDocument) {
         self.document = document
-        session = document.session
+        session = document.session()
     }
 
     var body: some View {
