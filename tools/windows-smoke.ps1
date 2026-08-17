@@ -63,7 +63,7 @@ try {
     if (-not (Test-Path $StartupLogPath)) { throw "Startup stage log was not created: $StartupLogPath" }
     $StartupLog = Get-Content $StartupLogPath -Raw
     if ($StartupLog -notmatch "startup\.complete") { throw "Startup log did not reach startup.complete." }
-    if ((Get-NewApplicationCrashes).Count -ne 0) { throw "A new Application Error Event ID 1000 was recorded for md4a." }
+    if (@(Get-NewApplicationCrashes).Count -ne 0) { throw "A new Application Error Event ID 1000 was recorded for md4a." }
 
     $Fixture = Join-Path $env:RUNNER_TEMP "md4a-smoke.md"
     Set-Content -Path $Fixture -Value "# Windows activation smoke`r`n`r`nUTF-8 中文 🚀" -Encoding utf8
@@ -72,7 +72,7 @@ try {
     Start-Sleep -Seconds 2
     $ActivatedApp.Refresh()
     if ($ActivatedApp.HasExited) { throw "md4a file-activation process did not survive." }
-    if ((Get-NewApplicationCrashes).Count -ne 0) { throw "File activation produced an Application Error Event ID 1000." }
+    if (@(Get-NewApplicationCrashes).Count -ne 0) { throw "File activation produced an Application Error Event ID 1000." }
 
     Stop-Process -Id $ActivatedApp.Id -Force
     Stop-Process -Id $App.Id -Force
