@@ -43,8 +43,17 @@ function Invoke-SignTool([string]$Path) {
     return $true
 }
 function Assert-DesktopExecutable([string]$Path) {
-    Need "dumpbin" "dumpbin is required to verify the Windows executable headers. Run from Developer PowerShell."
-    $Headers = (& dumpbin /headers $Path | Out-String)
+    $Dumpbin = Get-Command "dumpbin" -ErrorAction SilentlyContinue
+    if (-not $Dumpbin) {
+        $DumpbinPath = Get-ChildItem "${env:ProgramFiles}\Microsoft Visual Studio\2022" -Filter dumpbin.exe -Recurse -ErrorAction SilentlyContinue |
+            Where-Object { $_.FullName -match '\\VC\\Tools\\MSVC\\[^\\]+\\bin\\Hostx64\\x64\\dumpbin\.exe$' } |
+            Sort-Object FullName -Descending |
+            Select-Object -First 1 -ExpandProperty FullName
+        if (-not $DumpbinPath) { Fail "dumpbin is required to verify the Windows executable headers." }
+    } else {
+        $DumpbinPath = $Dumpbin.Source
+    }
+    $Headers = (& $DumpbinPath /headers $Path | Out-String)
     if ($LASTEXITCODE -ne 0) { Fail "Could not inspect PE headers: $Path" }
     if ($Headers -match "App.?Container") { Fail "Windows executable is AppContainer-enabled; unpackaged desktop builds must link with /APPCONTAINER:NO." }
 }
