@@ -5,6 +5,13 @@ on:
     tags:
       - "v*"
   workflow_dispatch:
+    inputs:
+      platform:
+        description: Platform job to validate
+        required: true
+        default: all
+        type: choice
+        options: [all, core, macos, ios, android, windows, linux]
 
 permissions:
   contents: read
@@ -14,6 +21,7 @@ env:
 
 jobs:
   core:
+    if: github.event_name != 'workflow_dispatch' || inputs.platform == 'all' || inputs.platform == 'core'
     name: Core tests
     runs-on: ubuntu-24.04
     steps:
@@ -24,6 +32,7 @@ jobs:
       - run: task core:build
 
   macos:
+    if: github.event_name != 'workflow_dispatch' || inputs.platform == 'all' || inputs.platform == 'macos'
     name: macOS package
     runs-on: macos-15
     steps:
@@ -43,6 +52,7 @@ jobs:
           if-no-files-found: error
 
   ios-check:
+    if: github.event_name != 'workflow_dispatch' || inputs.platform == 'all' || inputs.platform == 'ios'
     name: iOS local package check
     runs-on: macos-15
     steps:
@@ -57,6 +67,7 @@ jobs:
       - run: task ios:build
 
   android:
+    if: github.event_name != 'workflow_dispatch' || inputs.platform == 'all' || inputs.platform == 'android'
     name: Android production package
     runs-on: ubuntu-24.04
     environment: android-production
@@ -134,6 +145,7 @@ jobs:
           if-no-files-found: error
 
   windows:
+    if: github.event_name != 'workflow_dispatch' || inputs.platform == 'all' || inputs.platform == 'windows'
     name: Windows package
     runs-on: windows-2022
     environment: windows-production
@@ -180,6 +192,7 @@ jobs:
           if-no-files-found: error
 
   linux:
+    if: github.event_name != 'workflow_dispatch' || inputs.platform == 'all' || inputs.platform == 'linux'
     name: Linux package
     runs-on: ubuntu-24.04
     steps:

@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "MainWindow.h"
+#include "Startup.h"
 
 #include <windows.h>
 #include <shobjidl_core.h>
@@ -73,16 +74,23 @@ void InitializePickerWithWindow(IInspectable const& picker, Window const& window
 class MainWindowImpl final : public md4a::windows::MainWindow {
  public:
   MainWindowImpl() {
+    md4a::startup::Log("window.construct.begin");
     m_window.Title(L"md4a — Untitled");
+    md4a::startup::Log("window.title.complete");
     BuildUi();
+    md4a::startup::Log("window.ui.complete");
     m_editor.Text(L"# Untitled\r\n\r\n");
+    md4a::startup::Log("window.initial-text.complete");
     m_dirty = false;
     RenderPreview();
+    md4a::startup::Log("window.initial-preview.complete");
     m_window.Activate();
+    md4a::startup::Log("window.activate.complete");
   }
 
  private:
   void BuildUi() {
+    md4a::startup::Log("window.ui.grid.begin");
     Grid root;
     RowDefinition menuRow;
     menuRow.Height(GridLengthHelper::Auto());
@@ -91,6 +99,7 @@ class MainWindowImpl final : public md4a::windows::MainWindow {
 
     MenuBar menu;
     MenuBarItem fileMenu;
+    md4a::startup::Log("window.ui.menu.created");
     fileMenu.Title(L"File");
     AddMenuItem(fileMenu, L"New", VirtualKey::N, [this] { NewDocument(); });
     AddMenuItem(fileMenu, L"Open…", VirtualKey::O, [this] { OpenDocument(); });
@@ -105,6 +114,7 @@ class MainWindowImpl final : public md4a::windows::MainWindow {
                 [] { OpenDefaultAppsSettings(); }, VirtualKeyModifiers::None);
     menu.Items().Append(settingsMenu);
     root.Children().Append(menu);
+    md4a::startup::Log("window.ui.menu.complete");
 
     Grid workspace;
     workspace.ColumnDefinitions().Append(ColumnDefinition());
@@ -112,6 +122,7 @@ class MainWindowImpl final : public md4a::windows::MainWindow {
     Grid::SetRow(workspace, 1);
 
     m_editor.AcceptsReturn(true);
+    md4a::startup::Log("window.ui.editor.created");
     m_editor.TextWrapping(TextWrapping::NoWrap);
     m_editor.FontFamily(Microsoft::UI::Xaml::Media::FontFamily(L"Consolas"));
     m_editor.Padding(ThicknessHelper::FromUniformLength(16));
@@ -122,11 +133,15 @@ class MainWindowImpl final : public md4a::windows::MainWindow {
       RenderPreview();
     });
     workspace.Children().Append(m_editor);
+    md4a::startup::Log("window.ui.editor.complete");
 
     Grid::SetColumn(m_preview, 1);
+    md4a::startup::Log("window.ui.preview.created");
     workspace.Children().Append(m_preview);
+    md4a::startup::Log("window.ui.preview.complete");
     root.Children().Append(workspace);
     m_window.Content(root);
+    md4a::startup::Log("window.ui.content.complete");
   }
 
   template <typename Action>
