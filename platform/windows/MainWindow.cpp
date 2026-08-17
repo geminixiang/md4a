@@ -82,10 +82,9 @@ class MainWindowImpl final : public md4a::windows::MainWindow {
     m_editor.Text(L"# Untitled\r\n\r\n");
     md4a::startup::Log("window.initial-text.complete");
     m_dirty = false;
-    RenderPreview();
-    md4a::startup::Log("window.initial-preview.complete");
     m_window.Activate();
     md4a::startup::Log("window.activate.complete");
+    InitializePreview();
   }
 
  private:
@@ -255,7 +254,22 @@ class MainWindowImpl final : public md4a::windows::MainWindow {
     }
   }
 
+  fire_and_forget InitializePreview() {
+    try {
+      md4a::startup::Log("window.preview-initialize.begin");
+      co_await m_preview.EnsureCoreWebView2Async();
+      m_previewReady = true;
+      md4a::startup::Log("window.preview-initialize.complete");
+      RenderPreview();
+      md4a::startup::Log("window.initial-preview.complete");
+    } catch (hresult_error const& error) {
+      md4a::startup::LogFailure("preview.initialize", error.code().value);
+      ShowError(L"Preview is unavailable", error.message());
+    }
+  }
+
   void RenderPreview() {
+    if (!m_previewReady) return;
     std::string markdown = to_string(m_editor.Text());
     md4a_render_options options{};
     md4a_result result = md4a_render(markdown.data(), markdown.size(), &options);
@@ -296,6 +310,7 @@ class MainWindowImpl final : public md4a::windows::MainWindow {
   WebView2 m_preview;
   StorageFile m_file{nullptr};
   bool m_dirty{false};
+  bool m_previewReady{false};
   uint64_t m_revision{0};
 };
 }  // namespace
