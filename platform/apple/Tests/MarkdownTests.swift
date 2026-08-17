@@ -275,13 +275,89 @@ final class MarkdownTests: XCTestCase {
         input.setSelection(NSRange(location: 1, length: 0))
         input.setMarkedText("n", selectedRange: NSRange(location: 1, length: 0))
         input.setMarkedText("ni", selectedRange: NSRange(location: 2, length: 0))
-        input.setMarkedText("你", selectedRange: NSRange(location: 1, length: 0))
+        input.commitText("你")
         input.unmarkText()
         XCTAssertEqual(document.value, "a你🙂\r\norange")
+        XCTAssertEqual(input.selection.range, NSRange(location: 2, length: 0))
+        XCTAssertNil(input.markedRange)
 
         input.setSelection(NSRange(location: 4, length: 0))
         input.deleteBackward()
         XCTAssertEqual(document.value, "a你\r\norange")
+    }
+
+    @MainActor
+    func testIMECommitReplacesActiveCompositionWithoutDuplicatingText() {
+        let cases: [(marked: [String], committed: String)] = [
+            (["n", "ni"], "你"),
+            (["中"], "中文"),
+            (["ㅎ", "하"], "한"),
+            (["k", "か"], "漢"),
+        ]
+
+        for value in cases {
+            let document = TestAppleEditorDocument("A🙂B")
+            let input = AppleEditorInputModel(document: document)
+            input.setSelection(NSRange(location: 1, length: 0))
+            for marked in value.marked {
+                input.setMarkedText(
+                    marked,
+                    selectedRange: NSRange(location: marked.utf16.count, length: 0)
+                )
+            }
+
+            input.commitText(value.committed)
+            input.unmarkText()
+
+            XCTAssertEqual(document.value, "A\(value.committed)🙂B")
+            XCTAssertEqual(
+                input.selection.range,
+                NSRange(location: 1 + value.committed.utf16.count, length: 0)
+            )
+            XCTAssertNil(input.markedRange)
+            XCTAssertEqual(Data(document.value.utf8), Data("A\(value.committed)🙂B".utf8))
+        }
+    }
+
+    @MainActor
+    func testIMEExplicitReplacementRangeTakesPrecedenceAndRepeatedCompositionReplacesMark() {
+        let document = TestAppleEditorDocument("before target after")
+        let input = AppleEditorInputModel(document: document)
+        let target = (document.value as NSString).range(of: "target")
+
+        input.setMarkedText(
+            "n",
+            selectedRange: NSRange(location: 1, length: 0),
+            replacementRange: target
+        )
+        input.setMarkedText("ni", selectedRange: NSRange(location: 2, length: 0))
+        XCTAssertEqual(document.value, "before ni after")
+        XCTAssertEqual(input.markedRange, NSRange(location: target.location, length: 2))
+
+        input.commitText("你", replacementRange: input.markedRange)
+        XCTAssertEqual(document.value, "before 你 after")
+        XCTAssertEqual(input.selection.range, NSRange(location: target.location + 1, length: 0))
+        XCTAssertNil(input.markedRange)
+    }
+
+    @MainActor
+    func testPlatformInputAdapterCommitsMarkedTextExactlyOnce() {
+        let document = TestAppleEditorDocument("A")
+        let editor = AppleViewportEditorView(document: document)
+        #if os(macOS)
+        let notFound = NSRange(location: NSNotFound, length: 0)
+        editor.setMarkedText("n", selectedRange: NSRange(location: 1, length: 0), replacementRange: notFound)
+        editor.setMarkedText("ni", selectedRange: NSRange(location: 2, length: 0), replacementRange: notFound)
+        editor.insertText("你", replacementRange: notFound)
+        #else
+        editor.setMarkedText("n", selectedRange: NSRange(location: 1, length: 0))
+        editor.setMarkedText("ni", selectedRange: NSRange(location: 2, length: 0))
+        editor.insertText("你")
+        #endif
+
+        XCTAssertEqual(document.value, "你A")
+        XCTAssertEqual(editor.model.selection.range, NSRange(location: 1, length: 0))
+        XCTAssertNil(editor.model.markedRange)
     }
 
     @MainActor

@@ -64,8 +64,20 @@ final class AppleEditorInputModel {
         replace(selection.range, with: text, markInsertedText: false)
     }
 
-    func setMarkedText(_ text: String, selectedRange: NSRange) {
-        let target = markedRange ?? selection.range
+    /// Commits text supplied by an input method. Composition text already
+    /// lives in the document, so an ordinary commit replaces that marked
+    /// range rather than appending at the composition selection.
+    func commitText(_ text: String, replacementRange: NSRange? = nil) {
+        let target = validReplacementRange(replacementRange) ?? markedRange ?? selection.range
+        replace(target, with: text, markInsertedText: false)
+    }
+
+    func setMarkedText(
+        _ text: String,
+        selectedRange: NSRange,
+        replacementRange: NSRange? = nil
+    ) {
+        let target = validReplacementRange(replacementRange) ?? markedRange ?? selection.range
         replace(target, with: text, markInsertedText: true)
         let inserted = NSRange(location: target.location, length: text.utf16.count)
         markedRange = inserted
@@ -186,6 +198,14 @@ final class AppleEditorInputModel {
         markedRange = nil
         document.setEditorSelection(selection.range)
         didChange?()
+    }
+
+    private func validReplacementRange(_ range: NSRange?) -> NSRange? {
+        guard let range,
+              range.location != NSNotFound,
+              range.location <= document.utf16Count,
+              range.length <= document.utf16Count - range.location else { return nil }
+        return range
     }
 
     private func replace(_ range: NSRange, with text: String, markInsertedText: Bool) {
@@ -324,14 +344,12 @@ final class AppleViewportEditorView: NSView, @preconcurrency NSTextInputClient {
 
     func insertText(_ string: Any, replacementRange: NSRange) {
         let value = (string as? NSAttributedString)?.string ?? (string as? String) ?? ""
-        if replacementRange.location != NSNotFound { model.setSelection(replacementRange) }
-        model.replaceSelection(with: value)
+        model.commitText(value, replacementRange: replacementRange)
     }
 
     func setMarkedText(_ string: Any, selectedRange: NSRange, replacementRange: NSRange) {
         let value = (string as? NSAttributedString)?.string ?? (string as? String) ?? ""
-        if replacementRange.location != NSNotFound { model.setSelection(replacementRange) }
-        model.setMarkedText(value, selectedRange: selectedRange)
+        model.setMarkedText(value, selectedRange: selectedRange, replacementRange: replacementRange)
     }
 
     func unmarkText() { model.unmarkText() }
@@ -645,7 +663,7 @@ final class AppleViewportEditorView: UIScrollView, UITextInput {
         presentEditMenu()
     }
 
-    func insertText(_ text: String) { performTextChange { model.replaceSelection(with: text) } }
+    func insertText(_ text: String) { performTextChange { model.commitText(text) } }
     func deleteBackward() { performTextChange { model.deleteBackward() } }
 
     var selectedTextRange: UITextRange? {
