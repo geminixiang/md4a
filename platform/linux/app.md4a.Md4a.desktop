@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=md4a
+Comment=Read and edit Markdown documents
+Exec=md4a_linux %F
+Icon=app.md4a.Md4a
+Terminal=false
+Categories=Utility;TextEditor;
+MimeType=text/markdown;text/plain;
+StartupNotify=true

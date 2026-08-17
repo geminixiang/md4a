@@ -141,8 +141,8 @@ case "$platform:$action" in
     arch=$(uname -m)
     root="md4a-${version}-linux-${host}-${arch}"
     rm -rf out/stage/linux
-    mkdir -p "out/stage/linux/$root/bin" out/artifacts
-    cp out/build/linux/platform/linux/md4a_linux "out/stage/linux/$root/bin/"
+    mkdir -p "out/stage/linux/$root" out/artifacts
+    DESTDIR="$ROOT/out/stage/linux/$root" cmake --install out/build/linux --prefix /usr --strip
     cp README.md LICENSE "out/stage/linux/$root/"
     output="$ROOT/out/artifacts/${root}.tar.gz"
     tar -C out/stage/linux -czf "$output" "$root"

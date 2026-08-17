@@ -39,6 +39,11 @@
   </ItemDefinitionGroup>
   <ItemGroup><ClCompile Include="main.cpp" /></ItemGroup>
   <ItemGroup>
+    <ResourceCompile Include="md4a.rc" />
+    <ClInclude Include="resource.h" />
+    <Image Include="assets\md4a.ico" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="Md4aCore.vcxproj"><Project>{A1BC59EB-D88E-4D6B-98CD-C6B0E914A37B}</Project></ProjectReference>
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.5.240311000" />
   </ItemGroup>

@@ -1,3 +1,5 @@
+include(GNUInstallDirs)
+
 find_package(PkgConfig REQUIRED)
 
 pkg_check_modules(GTK4 REQUIRED IMPORTED_TARGET gtk4>=4.10)
@@ -17,4 +19,11 @@ if(CMAKE_C_COMPILER_ID MATCHES "Clang|GNU")
   target_compile_options(md4a_linux PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
-install(TARGETS md4a_linux RUNTIME DESTINATION bin)
+install(TARGETS md4a_linux RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(FILES app.md4a.Md4a.desktop DESTINATION ${CMAKE_INSTALL_DATADIR}/applications)
+foreach(size 16 24 32 48 64 128 256 512)
+  install(
+    FILES icons/hicolor/${size}x${size}/apps/app.md4a.Md4a.png
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/${size}x${size}/apps
+  )
+endforeach()

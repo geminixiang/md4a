@@ -9,9 +9,11 @@
 /* Begin PBXBuildFile section */
 		03D6BCA9355215503A006F45 /* DocumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01143C73DAA97C845DCD60FF /* DocumentView.swift */; };
 		17916D75DA88AD4999060617 /* MarkdownDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4359C648B77E1A86C9D6F1 /* MarkdownDocument.swift */; };
+		1931FB9F29710268CD07CA94 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ABFFC88A7D8D2075F7167432 /* Assets.xcassets */; };
 		19D4C4163CE2717A40993C9E /* md4a.c in Sources */ = {isa = PBXBuildFile; fileRef = 77C1AF5F58AE959890F95640 /* md4a.c */; };
 		1A548835CC0DA940DCDFE35D /* ApplePieceTree.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62C9C1F8493E0E40E99318BF /* ApplePieceTree.swift */; };
 		21FE3C40644BDF059E461D37 /* entity.c in Sources */ = {isa = PBXBuildFile; fileRef = E6CC936185C7BA03E76430D9 /* entity.c */; };
+		2991D09D60DB5EF0CB5F444B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 43B87D31BDF22F96B240D29C /* Assets.xcassets */; };
 		4FD7A4BFEAD1C37C20763E7F /* AppleLargeDocumentCoreBenchmarks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F2C3D554D38ED5D0EA55D93 /* AppleLargeDocumentCoreBenchmarks.swift */; };
 		54206969DE4F85598608CDC4 /* MarkdownDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4359C648B77E1A86C9D6F1 /* MarkdownDocument.swift */; };
 		574F2FEE1F92F02849FA29D1 /* NativeDocumentEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08EDAFACD84C0D73507605B /* NativeDocumentEditor.swift */; };
@@ -88,6 +90,7 @@
 		26587919F672968E15807CD6 /* MarkdownRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownRenderer.swift; sourceTree = "<group>"; };
 		2B89050A4C257A18D1703181 /* md4aiOSBenchmarks.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = md4aiOSBenchmarks.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		41BF1E2A73CA4D2E0069EDDD /* MarkdownTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownTests.swift; sourceTree = "<group>"; };
+		43B87D31BDF22F96B240D29C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		62C9C1F8493E0E40E99318BF /* ApplePieceTree.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplePieceTree.swift; sourceTree = "<group>"; };
 		6D5F81A2E5BA23AA1E1CEE9C /* AppleBenchmarkSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleBenchmarkSupport.swift; sourceTree = "<group>"; };
 		6EF79B36C754A52299DB73F6 /* md4aMacApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = md4aMacApp.swift; sourceTree = "<group>"; };
@@ -97,6 +100,7 @@
 		981B73E89D1EF4162EE05877 /* md4aiOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = md4aiOSApp.swift; sourceTree = "<group>"; };
 		9F2C3D554D38ED5D0EA55D93 /* AppleLargeDocumentCoreBenchmarks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleLargeDocumentCoreBenchmarks.swift; sourceTree = "<group>"; };
 		AA260460CEE36B90B007391E /* AppleLargeDocumentUIBenchmarks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleLargeDocumentUIBenchmarks.swift; sourceTree = "<group>"; };
+		ABFFC88A7D8D2075F7167432 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AC185F6C2CA7B02A8C395AC9 /* md4aMacBenchmarks.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = md4aMacBenchmarks.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C43FFC8D64AA4CE6C621BD80 /* md4aMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = md4aMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C7A7CE3736B9A799AE87A50A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -147,6 +151,7 @@
 		1DC799663246E4A605C81414 /* macOS */ = {
 			isa = PBXGroup;
 			children = (
+				43B87D31BDF22F96B240D29C /* Assets.xcassets */,
 				C7A7CE3736B9A799AE87A50A /* Info.plist */,
 				6EF79B36C754A52299DB73F6 /* md4aMacApp.swift */,
 			);
@@ -165,6 +170,7 @@
 		302BE064159F368669CC1352 /* iOS */ = {
 			isa = PBXGroup;
 			children = (
+				ABFFC88A7D8D2075F7167432 /* Assets.xcassets */,
 				12710CC180B3183FA0CC6310 /* Info.plist */,
 				981B73E89D1EF4162EE05877 /* md4aiOSApp.swift */,
 			);
@@ -274,6 +280,7 @@
 			buildConfigurationList = C4D91A13E7D62F6023704816 /* Build configuration list for PBXNativeTarget "md4aMac" */;
 			buildPhases = (
 				5DDEB8C4099C7C1C77779213 /* Sources */,
+				2BB7945EB74F03FADF5E2D51 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -309,6 +316,7 @@
 			buildConfigurationList = 675A1F2DE954098E6431956F /* Build configuration list for PBXNativeTarget "md4aiOS" */;
 			buildPhases = (
 				3EC1AFD0725AAFE055719186 /* Sources */,
+				018C017B791A7DE1BF5B00CB /* Resources */,
 			);
 			buildRules = (
 			);
@@ -355,6 +363,25 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		018C017B791A7DE1BF5B00CB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1931FB9F29710268CD07CA94 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2BB7945EB74F03FADF5E2D51 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2991D09D60DB5EF0CB5F444B /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		0CFE8DD56E208D8302A7C50F /* Sources */ = {

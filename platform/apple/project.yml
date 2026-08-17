@@ -23,6 +23,8 @@ targets:
     sources:
       - Shared
       - macOS
+      - path: macOS/Assets.xcassets
+        buildPhase: resources
       - path: ../../core/src/md4a.c
       - path: ../../third_party/md4c/src/md4c.c
       - path: ../../third_party/md4c/src/md4c-html.c
@@ -64,6 +66,8 @@ targets:
     sources:
       - Shared
       - iOS
+      - path: iOS/Assets.xcassets
+        buildPhase: resources
       - path: ../../core/src/md4a.c
       - path: ../../third_party/md4c/src/md4c.c
       - path: ../../third_party/md4c/src/md4c-html.c
