@@ -210,7 +210,7 @@ class MainWindow final {
   bool m_dirty{false};
   uint64_t m_revision{0};
 };
-class App final : public ApplicationT<App> {
+class App : public ApplicationT<App> {
  public:
   void OnLaunched(LaunchActivatedEventArgs const&) {
     m_window = std::make_unique<MainWindow>();
