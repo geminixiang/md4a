@@ -91,8 +91,17 @@ switch ("${Platform}:${Action}") {
     "windows:init" {
         Initialize-Submodules
         Need "msbuild" "MSBuild is required. Install Visual Studio 2022 with 'Desktop development with C++', Windows SDK, and NuGet support, then run from Developer PowerShell."
-        & msbuild platform/windows/Md4a.Windows.vcxproj /restore /p:Configuration=Release /p:Platform=x64
+        Need "nuget" "NuGet CLI is required. Install it from https://www.nuget.org/downloads or run NuGet/setup-nuget in CI."
+        & nuget restore platform/windows/packages.config -PackagesDirectory platform/windows/packages -NonInteractive
         if ($LASTEXITCODE -ne 0) { Fail "Windows NuGet restore failed." }
+        $RequiredImports = @(
+            "platform/windows/packages/Microsoft.Windows.CppWinRT.2.0.221104.6/build/native/Microsoft.Windows.CppWinRT.props",
+            "platform/windows/packages/Microsoft.Windows.SDK.BuildTools.10.0.22621.756/build/native/Microsoft.Windows.SDK.BuildTools.props",
+            "platform/windows/packages/Microsoft.WindowsAppSDK.1.5.240311000/build/native/Microsoft.WindowsAppSDK.props"
+        )
+        foreach ($Import in $RequiredImports) {
+            if (-not (Test-Path $Import)) { Fail "Restored Windows native build import not found: $Import" }
+        }
     }
     "windows:build" {
         Validate-Inputs

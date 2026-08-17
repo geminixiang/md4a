@@ -9,9 +9,11 @@ A minimal native C++/WinRT desktop application using Windows App SDK WinUI 3 and
 - Windows 10 version 1809 or later
 - Visual Studio 2022 with **Desktop development with C++**
 - Windows 10/11 SDK
-- Visual Studio NuGet support
+- Visual Studio NuGet support or the standalone `nuget.exe` CLI
 - WebView2 Runtime (included with current Windows versions; otherwise install Microsoft's Evergreen Runtime)
 - The repository cloned with submodules: `git submodule update --init --recursive`
+
+The project deliberately uses native `packages.config` restoration and the packages' `build/native` imports, matching Microsoft's unpackaged C++/WinUI 3 project model. Do not convert it to SDK-style `PackageReference` or add .NET/UAP `TargetFramework` properties: under current MSBuild/NuGet this produces incompatible `native` versus `UAP,Version=v10.0` asset resolution.
 
 The project pins Windows App SDK `1.5.240311000`. Package restore supplies C++/WinRT headers, WinUI 3, bootstrap support, and the WebView2 SDK used by the WinUI control.
 
