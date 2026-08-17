@@ -1,8 +1,10 @@
 #include <windows.h>
 #include <shobjidl_core.h>
+#include <shellapi.h>
 #include <microsoft.ui.xaml.window.h>
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 
@@ -33,6 +35,31 @@ using namespace Windows::System;
 namespace {
 constexpr std::string_view kDocumentPrefix = R"(<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font:16px system-ui;margin:2rem;line-height:1.55;color:#202020}pre{padding:1rem;overflow:auto;background:#f5f5f5}code{font-family:ui-monospace,monospace}img{max-width:100%}@media(prefers-color-scheme:dark){body{color:#eee;background:#202020}pre{background:#303030}a{color:#75bfff}}</style></head><body>)";
 constexpr std::string_view kDocumentSuffix = "</body></html>";
+
+constexpr wchar_t kPreferencesKey[] = L"Software\\md4a";
+constexpr wchar_t kDefaultAppsUri[] = L"ms-settings:defaultapps?registeredAppUser=md4a";
+std::optional<std::wstring> g_initialDocumentPath;
+
+bool HasAskedAboutDefaults() {
+  DWORD value{};
+  DWORD size = sizeof(value);
+  return RegGetValueW(HKEY_CURRENT_USER, kPreferencesKey, L"AskedAboutDefaults",
+                      RRF_RT_REG_DWORD, nullptr, &value, &size) == ERROR_SUCCESS && value != 0;
+}
+
+void RecordDefaultsPrompt() {
+  DWORD value = 1;
+  RegSetKeyValueW(HKEY_CURRENT_USER, kPreferencesKey, L"AskedAboutDefaults",
+                  REG_DWORD, &value, sizeof(value));
+}
+
+fire_and_forget OpenDefaultAppsSettings() {
+  try {
+    co_await Launcher::LaunchUriAsync(Uri(kDefaultAppsUri));
+  } catch (...) {
+    co_await Launcher::LaunchUriAsync(Uri(L"ms-settings:defaultapps"));
+  }
+}
 
 void InitializePickerWithWindow(IInspectable const& picker, Window const& window) {
   HWND hwnd{};
@@ -68,6 +95,12 @@ class MainWindow final {
     AddMenuItem(fileMenu, L"Save As…", VirtualKey::S,
                 [this] { SaveDocument(true); }, VirtualKeyModifiers::Control | VirtualKeyModifiers::Shift);
     menu.Items().Append(fileMenu);
+
+    MenuBarItem settingsMenu;
+    settingsMenu.Title(L"Settings");
+    AddMenuItem(settingsMenu, L"Default apps…", VirtualKey::None,
+                [] { OpenDefaultAppsSettings(); }, VirtualKeyModifiers::None);
+    menu.Items().Append(settingsMenu);
     root.Children().Append(menu);
 
     Grid workspace;
@@ -98,10 +131,12 @@ class MainWindow final {
                    Action action, VirtualKeyModifiers modifiers = VirtualKeyModifiers::Control) {
     MenuFlyoutItem item;
     item.Text(label);
-    KeyboardAccelerator accelerator;
-    accelerator.Key(key);
-    accelerator.Modifiers(modifiers);
-    item.KeyboardAccelerators().Append(accelerator);
+    if (key != VirtualKey::None) {
+      KeyboardAccelerator accelerator;
+      accelerator.Key(key);
+      accelerator.Modifiers(modifiers);
+      item.KeyboardAccelerators().Append(accelerator);
+    }
     item.Click([action = std::move(action)](IInspectable const&, RoutedEventArgs const&) { action(); });
     menu.Items().Append(item);
   }
@@ -118,6 +153,43 @@ class MainWindow final {
     UpdateTitle();
   }
 
+  fire_and_forget OpenPath(std::wstring path) {
+    try {
+      auto file = co_await StorageFile::GetFileFromPathAsync(path);
+      co_await LoadFile(file);
+    } catch (hresult_error const& error) {
+      ShowError(L"Could not open the document", error.message());
+    }
+  }
+
+  IAsyncAction LoadFile(StorageFile const& file) {
+    auto text = co_await FileIO::ReadTextAsync(file, Streams::UnicodeEncoding::Utf8);
+    m_file = file;
+    m_editor.Text(text);
+    m_dirty = false;
+    UpdateTitle();
+  }
+
+ public:
+  void OpenInitialDocument(std::wstring const& path) { OpenPath(path); }
+
+  fire_and_forget PromptForDefaultApp() {
+    if (HasAskedAboutDefaults()) co_return;
+    RecordDefaultsPrompt();
+    co_await resume_foreground(m_window.DispatcherQueue());
+
+    ContentDialog dialog;
+    dialog.XamlRoot(m_window.Content().XamlRoot());
+    dialog.Title(box_value(L"Open Markdown files with md4a?"));
+    dialog.Content(box_value(L"Windows controls default apps. Open Settings to choose md4a for .md and .markdown files?"));
+    dialog.PrimaryButtonText(L"Open Settings");
+    dialog.CloseButtonText(L"Not now");
+    if (co_await dialog.ShowAsync() == ContentDialogResult::Primary) {
+      OpenDefaultAppsSettings();
+    }
+  }
+
+ private:
   fire_and_forget OpenDocument() {
     if (m_dirty) {
       ShowError(L"Save the current document first",
@@ -132,11 +204,7 @@ class MainWindow final {
     if (!file) co_return;
 
     try {
-      auto text = co_await FileIO::ReadTextAsync(file, Streams::UnicodeEncoding::Utf8);
-      m_file = file;
-      m_editor.Text(text);
-      m_dirty = false;
-      UpdateTitle();
+      co_await LoadFile(file);
     } catch (hresult_error const& error) {
       ShowError(L"Could not open the document", error.message());
     }
@@ -214,6 +282,13 @@ class App : public ApplicationT<App> {
  public:
   void OnLaunched(LaunchActivatedEventArgs const&) {
     m_window = std::make_unique<MainWindow>();
+    if (g_initialDocumentPath) {
+      m_window->OpenInitialDocument(*g_initialDocumentPath);
+    }
+    wchar_t skipPrompt[2]{};
+    if (GetEnvironmentVariableW(L"MD4A_SKIP_DEFAULT_APP_PROMPT", skipPrompt, 2) == 0) {
+      m_window->PromptForDefaultApp();
+    }
   }
 
  private:
@@ -222,6 +297,16 @@ class App : public ApplicationT<App> {
 }  // namespace
 
 int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
+  int argumentCount{};
+  if (wchar_t** arguments = CommandLineToArgvW(GetCommandLineW(), &argumentCount)) {
+    if (argumentCount > 1 && arguments[1][0] != L'-' && arguments[1][0] != L'/') {
+      wchar_t fullPath[MAX_PATH]{};
+      if (GetFullPathNameW(arguments[1], MAX_PATH, fullPath, nullptr) != 0) {
+        g_initialDocumentPath = fullPath;
+      }
+    }
+    LocalFree(arguments);
+  }
   init_apartment(apartment_type::single_threaded);
   Application::Start([](auto&&) { make<App>(); });
   return 0;

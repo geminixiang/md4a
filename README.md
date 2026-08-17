@@ -31,7 +31,8 @@ task --list
 task core:init
 task core:build
 task android:init
-task android:build VERSION=0.2.0 BUILD_NUMBER=42
+task android:build VERSION=0.2.0 BUILD_NUMBER=42 # local debug APK
+# task android:release requires the production signing environment
 ```
 
 Available namespaces are `core`, `macos`, `ios`, `android`, `linux`, and `windows`, each with `init` and `build`. Apple commands require macOS, Linux commands require Linux, and Windows commands require Windows. `VERSION` defaults to `0.0.0-dev` and `BUILD_NUMBER` to `1`. Build artifacts go to `out/artifacts`; intermediate output uses `out/build/<platform>` and `out/stage/<platform>`. Every build reports whether its output is signed, unsigned, or debug-signed.
@@ -45,7 +46,7 @@ cmake --build out/build/core
 ctest --test-dir out/build/core --output-on-failure
 ```
 
-Tagged builds and release artifacts are documented in [`docs/releases.md`](docs/releases.md).
+Tagged builds and release artifacts are documented in [`docs/releases.md`](docs/releases.md). Android production signing, Play App Signing setup, and protected CI secrets are documented in [`platform/android/README.md`](platform/android/README.md).
 
 ## Extension safety
 

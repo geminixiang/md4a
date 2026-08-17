@@ -1,3 +1,4 @@
+import org.gradle.api.GradleException
 import org.gradle.api.tasks.JavaExec
 
 plugins {
@@ -5,6 +6,16 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
 }
+
+val productionSigningEnvironment = mapOf(
+    "MD4A_ANDROID_KEYSTORE_FILE" to System.getenv("MD4A_ANDROID_KEYSTORE_FILE"),
+    "MD4A_ANDROID_STORE_PASSWORD" to System.getenv("MD4A_ANDROID_STORE_PASSWORD"),
+    "MD4A_ANDROID_KEY_ALIAS" to System.getenv("MD4A_ANDROID_KEY_ALIAS"),
+    "MD4A_ANDROID_KEY_PASSWORD" to System.getenv("MD4A_ANDROID_KEY_PASSWORD"),
+)
+val productionSigningRequested = productionSigningEnvironment.values.any { !it.isNullOrBlank() }
+val missingProductionSigningValues = productionSigningEnvironment.filterValues { it.isNullOrBlank() }.keys
+val productionSigningReady = missingProductionSigningValues.isEmpty()
 
 android {
     val redirectedBuildDir = providers.gradleProperty("md4aBuildDir")
@@ -40,7 +51,30 @@ android {
         }
     }
 
+    signingConfigs {
+        if (productionSigningReady) {
+            create("production") {
+                storeFile = file(productionSigningEnvironment.getValue("MD4A_ANDROID_KEYSTORE_FILE")!!)
+                storePassword = productionSigningEnvironment.getValue("MD4A_ANDROID_STORE_PASSWORD")
+                keyAlias = productionSigningEnvironment.getValue("MD4A_ANDROID_KEY_ALIAS")
+                keyPassword = productionSigningEnvironment.getValue("MD4A_ANDROID_KEY_PASSWORD")
+                enableV1Signing = true
+                enableV2Signing = true
+                enableV3Signing = true
+                enableV4Signing = true
+            }
+        }
+    }
+
     buildTypes {
+        getByName("release") {
+            if (productionSigningReady) signingConfig = signingConfigs.getByName("production")
+        }
+        create("signedBeta") {
+            initWith(getByName("release"))
+            if (productionSigningReady) signingConfig = signingConfigs.getByName("production")
+            matchingFallbacks += "release"
+        }
         create("benchmark") {
             initWith(getByName("release"))
             isDebuggable = false
@@ -87,6 +121,39 @@ dependencies {
     "androidTestBenchmarkImplementation"("androidx.test:runner:1.6.2")
     "androidTestBenchmarkImplementation"("androidx.test:rules:1.6.1")
     "androidTestBenchmarkImplementation"("androidx.test.ext:junit:1.2.1")
+}
+
+val validateProductionSigning by tasks.registering {
+    group = "verification"
+    description = "Validate production Android signing environment"
+    doLast {
+        if (!productionSigningReady) {
+            throw GradleException(
+                "Production signing requires all of: ${productionSigningEnvironment.keys.joinToString()}. " +
+                    "Missing: ${missingProductionSigningValues.joinToString()}.",
+            )
+        }
+        val keystore = file(productionSigningEnvironment.getValue("MD4A_ANDROID_KEYSTORE_FILE")!!)
+        if (!keystore.isFile) {
+            throw GradleException("MD4A_ANDROID_KEYSTORE_FILE does not exist or is not a file: $keystore")
+        }
+    }
+}
+
+tasks.matching { it.name == "preSignedBetaBuild" }.configureEach {
+    dependsOn(validateProductionSigning)
+}
+if (productionSigningRequested) {
+    tasks.matching { it.name == "preReleaseBuild" }.configureEach {
+        dependsOn(validateProductionSigning)
+    }
+}
+
+if (productionSigningRequested && !productionSigningReady) {
+    logger.warn(
+        "Production Android signing was requested but is incomplete; signedBeta packaging will fail. " +
+            "Missing: ${missingProductionSigningValues.joinToString()}",
+    )
 }
 
 androidComponents {

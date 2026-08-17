@@ -37,6 +37,8 @@ targets:
         PRODUCT_NAME: md4a
         INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace: YES
         INFOPLIST_KEY_NSPrincipalClass: NSApplication
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
+        ENABLE_HARDENED_RUNTIME: YES
     info:
       path: macOS/Info.plist
       properties:
@@ -82,6 +84,7 @@ targets:
         INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace: YES
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
     info:
       path: iOS/Info.plist
       properties:

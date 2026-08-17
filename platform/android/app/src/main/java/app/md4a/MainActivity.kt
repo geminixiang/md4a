@@ -1,7 +1,10 @@
 package app.md4a
 
+import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
@@ -57,6 +60,24 @@ class MainActivity : ComponentActivity() {
         showingPreview = value
     }
 
+    internal fun openDefaultHandlerSettings() {
+        val openByDefault = Intent(
+            Settings.ACTION_APP_OPEN_BY_DEFAULT_SETTINGS,
+            Uri.parse("package:$packageName"),
+        )
+        val destination = DefaultHandlerOnboarding.destination(
+            canOpenDefaultSettings = openByDefault.resolveActivity(packageManager) != null,
+        )
+        val settingsIntent = when (destination) {
+            DefaultHandlerDestination.OpenByDefaultSettings -> openByDefault
+            DefaultHandlerDestination.ApplicationDetailsSettings -> Intent(
+                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                Uri.parse("package:$packageName"),
+            )
+        }
+        startActivity(settingsIntent)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         document.initialize(contentResolver, intent.data)
@@ -88,6 +109,13 @@ private fun MarkdownScreen(document: DocumentViewModel = viewModel()) {
     val context = LocalContext.current
     val activity = context as? MainActivity
     var pendingReplacement by remember { mutableStateOf<PendingReplacement?>(null) }
+    var showDefaultHandlerPrompt by remember { mutableStateOf(false) }
+    val defaultHandlerPreferences = remember {
+        context.getSharedPreferences(
+            DefaultHandlerOnboarding.preferencesName,
+            Context.MODE_PRIVATE,
+        )
+    }
     val preview = activity?.showingPreview ?: false
     val snackbar = remember { SnackbarHostState() }
     val openDocument = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -107,6 +135,19 @@ private fun MarkdownScreen(document: DocumentViewModel = viewModel()) {
     val createDocument = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("text/markdown"),
     ) { uri -> uri?.let { document.save(context.contentResolver, it) } }
+
+    LaunchedEffect(Unit) {
+        val hasAsked = defaultHandlerPreferences.getBoolean(
+            DefaultHandlerOnboarding.askedKey,
+            false,
+        )
+        if (DefaultHandlerOnboarding.shouldAsk(hasAsked)) {
+            defaultHandlerPreferences.edit()
+                .putBoolean(DefaultHandlerOnboarding.askedKey, true)
+                .apply()
+            showDefaultHandlerPrompt = true
+        }
+    }
 
     LaunchedEffect(document.pendingLaunchUri, document.isRestoring) {
         val uri = document.pendingLaunchUri
@@ -129,6 +170,29 @@ private fun MarkdownScreen(document: DocumentViewModel = viewModel()) {
             snackbar.showSnackbar(it)
             document.clearError()
         }
+    }
+
+    if (showDefaultHandlerPrompt) {
+        AlertDialog(
+            onDismissRequest = { showDefaultHandlerPrompt = false },
+            title = { Text("Open Markdown with md4a?") },
+            text = {
+                Text(
+                    "Android does not let apps change this automatically. " +
+                        "When you next open a Markdown file, choose md4a and tap Always. " +
+                        "You can review md4a's Open by default settings now.",
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDefaultHandlerPrompt = false
+                    activity?.openDefaultHandlerSettings()
+                }) { Text("Open settings") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDefaultHandlerPrompt = false }) { Text("Not now") }
+            },
+        )
     }
 
     pendingReplacement?.let { pending ->
@@ -172,6 +236,9 @@ private fun MarkdownScreen(document: DocumentViewModel = viewModel()) {
             TopAppBar(
                 title = { Text((if (document.isDirty) "• " else "") + document.title) },
                 actions = {
+                    TextButton(
+                        onClick = { activity?.openDefaultHandlerSettings() },
+                    ) { Text("Defaults") }
                     TextButton(
                         onClick = {
                             if (document.isDirty) pendingReplacement = PendingReplacement.New

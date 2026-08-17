@@ -27,6 +27,12 @@ struct md4aMacApp: App {
         }
         .defaultSize(WindowDefaults.size)
 
+        Settings {
+            MarkdownDefaultAppSettingsView()
+                .frame(width: 460)
+                .padding()
+        }
+
         // Finder/Open With activation is still routed to the native document
         // scene. The welcome window intentionally remains available as a home
         // for opening another document, matching Preview and other Mac apps.
@@ -56,6 +62,12 @@ private struct WelcomeView: View {
     @Environment(\.openDocument) private var openDocument
     @Environment(\.newDocument) private var newDocument
     @State private var errorMessage: String?
+    @State private var showDefaultConfirmation = false
+    @State private var defaultAppMessage: String?
+    @State private var isDefaultApplication = false
+    @AppStorage("markdownDefaultAppDecision") private var defaultAppDecision = MarkdownDefaultAppDecision.notAsked.rawValue
+
+    private let defaultApplicationService = WorkspaceMarkdownDefaultApplicationService()
 
     var body: some View {
         VStack(spacing: 0) {
@@ -96,6 +108,39 @@ private struct WelcomeView: View {
             .frame(width: 240)
             .padding(.top, 30)
 
+            if shouldOfferDefaultApplication {
+                VStack(alignment: .leading, spacing: 10) {
+                    Label("Open Markdown with md4a", systemImage: "doc.text")
+                        .font(.headline)
+                    Text("You can make md4a the default app for .md and .markdown files. This changes only after you confirm.")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                    HStack {
+                        Button("Not Now") {
+                            defaultAppDecision = MarkdownDefaultAppDecision.dismissed.rawValue
+                        }
+                        Spacer()
+                        Button("Make Default…") {
+                            showDefaultConfirmation = true
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                }
+                .padding()
+                .frame(maxWidth: 420)
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
+                .padding(.top, 24)
+            }
+
+            if let defaultAppMessage {
+                Text(defaultAppMessage)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 420)
+                    .padding(.top, 12)
+            }
+
             if let errorMessage {
                 Text(errorMessage)
                     .font(.callout)
@@ -111,6 +156,34 @@ private struct WelcomeView: View {
         .background(Color(nsColor: .windowBackgroundColor))
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("md4a.welcome")
+        .task {
+            isDefaultApplication = defaultApplicationService.isCurrentApplicationDefault()
+        }
+        .alert("Make md4a the default Markdown app?", isPresented: $showDefaultConfirmation) {
+            Button("Cancel", role: .cancel) {}
+            Button("Make Default") { setAsDefaultApplication() }
+        } message: {
+            Text("Future .md and .markdown files will open in md4a. You can change this later in Finder or System Settings.")
+        }
+    }
+
+    private var shouldOfferDefaultApplication: Bool {
+        defaultAppDecision == MarkdownDefaultAppDecision.notAsked.rawValue && !isDefaultApplication
+    }
+
+    private func setAsDefaultApplication() {
+        defaultAppDecision = MarkdownDefaultAppDecision.requested.rawValue
+        Task { @MainActor in
+            do {
+                try await defaultApplicationService.setCurrentApplicationAsDefault()
+                isDefaultApplication = defaultApplicationService.isCurrentApplicationDefault()
+                defaultAppMessage = isDefaultApplication
+                    ? "md4a is now the default Markdown app."
+                    : "macOS did not report md4a as the default. Use Finder’s Get Info → Open with → Change All as a fallback."
+            } catch {
+                defaultAppMessage = "Couldn’t change the default app: \(error.localizedDescription). You can use Finder’s Get Info → Open with → Change All."
+            }
+        }
     }
 
     private func chooseFile() {

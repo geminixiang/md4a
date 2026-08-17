@@ -108,18 +108,27 @@ case "$platform:$action" in
     mkdir -p out/build/android out/stage/android out/artifacts
     MD4A_VERSION_NAME="$version" MD4A_VERSION_CODE="$build_number" \
       platform/android/gradlew -p platform/android --no-daemon \
-      -Pmd4aBuildDir="$ROOT/out/build/android" testDebugUnitTest assembleDebug assembleRelease bundleRelease
+      -Pmd4aBuildDir="$ROOT/out/build/android" testDebugUnitTest assembleDebug
     debug=out/build/android/outputs/apk/debug/app-debug.apk
-    release_apk=out/build/android/outputs/apk/release/app-release-unsigned.apk
-    release_aab=out/build/android/outputs/bundle/release/app-release.aab
-    for file in "$debug" "$release_apk" "$release_aab"; do [[ -f "$file" ]] || fail "Android build output not found: $file"; done
+    [[ -f "$debug" ]] || fail "Android build output not found: $debug"
     cp "$debug" "out/artifacts/md4a-${version}-android-debug.apk"
-    cp "$release_apk" "out/artifacts/md4a-${version}-android-unsigned.apk"
-    cp "$release_aab" "out/artifacts/md4a-${version}-android-unsigned.aab"
-    cp "$debug" "$release_apk" "$release_aab" out/stage/android/
-    artifact "$ROOT/out/artifacts/md4a-${version}-android-debug.apk" "debug-signed local-test package"
-    artifact "$ROOT/out/artifacts/md4a-${version}-android-unsigned.apk" "unsigned release package"
-    artifact "$ROOT/out/artifacts/md4a-${version}-android-unsigned.aab" "unsigned release package"
+    cp "$debug" out/stage/android/
+    artifact "$ROOT/out/artifacts/md4a-${version}-android-debug.apk" "debug-signed local-test package; never publish"
+    ;;
+  android:release)
+    validate_inputs
+    mkdir -p out/build/android out/stage/android out/artifacts
+    MD4A_VERSION_NAME="$version" MD4A_VERSION_CODE="$build_number" \
+      platform/android/gradlew -p platform/android --no-daemon \
+      -Pmd4aBuildDir="$ROOT/out/build/android" testDebugUnitTest assembleSignedBeta bundleSignedBeta
+    release_apk=out/build/android/outputs/apk/signedBeta/app-signedBeta.apk
+    release_aab=out/build/android/outputs/bundle/signedBeta/app-signedBeta.aab
+    for file in "$release_apk" "$release_aab"; do [[ -f "$file" ]] || fail "Android signed output not found: $file"; done
+    cp "$release_apk" "out/artifacts/md4a-${version}-android.apk"
+    cp "$release_aab" "out/artifacts/md4a-${version}-android.aab"
+    cp "$release_apk" "$release_aab" out/stage/android/
+    artifact "$ROOT/out/artifacts/md4a-${version}-android.apk" "production-signed universal APK"
+    artifact "$ROOT/out/artifacts/md4a-${version}-android.aab" "production-signed Play upload bundle"
     ;;
   linux:init)
     require_linux

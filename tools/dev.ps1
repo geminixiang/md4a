@@ -25,6 +25,29 @@ function Validate-Inputs {
 function Show-Artifact([string]$Path, [string]$Status) {
     Write-Host "Artifact: $Path ($Status)"
 }
+function Invoke-SignTool([string]$Path) {
+    if (-not $env:MD4A_WINDOWS_SIGNING_CERTIFICATE -and -not $env:MD4A_WINDOWS_SIGNING_SHA1) { return $false }
+    Need "signtool" "signtool is required when Windows signing is configured. Install the Windows SDK signing tools."
+    $Arguments = @("sign", "/fd", "SHA256", "/td", "SHA256", "/tr", $(if ($env:MD4A_WINDOWS_TIMESTAMP_URL) { $env:MD4A_WINDOWS_TIMESTAMP_URL } else { "http://timestamp.digicert.com" }))
+    if ($env:MD4A_WINDOWS_SIGNING_CERTIFICATE) {
+        $Arguments += @("/f", $env:MD4A_WINDOWS_SIGNING_CERTIFICATE)
+        if ($env:MD4A_WINDOWS_SIGNING_PASSWORD) { $Arguments += @("/p", $env:MD4A_WINDOWS_SIGNING_PASSWORD) }
+    } else {
+        $Arguments += @("/sha1", $env:MD4A_WINDOWS_SIGNING_SHA1)
+    }
+    $Arguments += $Path
+    & signtool @Arguments
+    if ($LASTEXITCODE -ne 0) { Fail "Authenticode signing failed: $Path" }
+    & signtool verify /pa /v $Path
+    if ($LASTEXITCODE -ne 0) { Fail "Authenticode verification failed: $Path" }
+    return $true
+}
+function Assert-DesktopExecutable([string]$Path) {
+    Need "dumpbin" "dumpbin is required to verify the Windows executable headers. Run from Developer PowerShell."
+    $Headers = (& dumpbin /headers $Path | Out-String)
+    if ($LASTEXITCODE -ne 0) { Fail "Could not inspect PE headers: $Path" }
+    if ($Headers -match "App.?Container") { Fail "Windows executable is AppContainer-enabled; unpackaged desktop builds must link with /APPCONTAINER:NO." }
+}
 
 switch ("${Platform}:${Action}") {
     "core:init" {
@@ -72,21 +95,32 @@ switch ("${Platform}:${Action}") {
         New-Item -ItemType Directory -Force out/build/android, out/stage/android, out/artifacts | Out-Null
         $env:MD4A_VERSION_NAME = $Version
         $env:MD4A_VERSION_CODE = $BuildNumber
-        & platform/android/gradlew.bat -p platform/android --no-daemon "-Pmd4aBuildDir=$Root/out/build/android" testDebugUnitTest assembleDebug assembleRelease bundleRelease
+        & platform/android/gradlew.bat -p platform/android --no-daemon "-Pmd4aBuildDir=$Root/out/build/android" testDebugUnitTest assembleDebug
         if ($LASTEXITCODE -ne 0) { Fail "Android build failed." }
+        $Source = "out/build/android/outputs/apk/debug/app-debug.apk"
+        if (-not (Test-Path $Source)) { Fail "Android build output not found: $Source" }
+        Copy-Item $Source "out/artifacts/md4a-$Version-android-debug.apk" -Force
+        Copy-Item $Source out/stage/android -Force
+        Show-Artifact "$Root/out/artifacts/md4a-$Version-android-debug.apk" "debug-signed local-test package; never publish"
+    }
+    "android:release" {
+        Validate-Inputs
+        New-Item -ItemType Directory -Force out/build/android, out/stage/android, out/artifacts | Out-Null
+        $env:MD4A_VERSION_NAME = $Version
+        $env:MD4A_VERSION_CODE = $BuildNumber
+        & platform/android/gradlew.bat -p platform/android --no-daemon "-Pmd4aBuildDir=$Root/out/build/android" testDebugUnitTest assembleSignedBeta bundleSignedBeta
+        if ($LASTEXITCODE -ne 0) { Fail "Production-signed Android build failed." }
         $Outputs = @{
-            "out/build/android/outputs/apk/debug/app-debug.apk" = "md4a-$Version-android-debug.apk"
-            "out/build/android/outputs/apk/release/app-release-unsigned.apk" = "md4a-$Version-android-unsigned.apk"
-            "out/build/android/outputs/bundle/release/app-release.aab" = "md4a-$Version-android-unsigned.aab"
+            "out/build/android/outputs/apk/signedBeta/app-signedBeta.apk" = "md4a-$Version-android.apk"
+            "out/build/android/outputs/bundle/signedBeta/app-signedBeta.aab" = "md4a-$Version-android.aab"
         }
         foreach ($Source in $Outputs.Keys) {
-            if (-not (Test-Path $Source)) { Fail "Android build output not found: $Source" }
+            if (-not (Test-Path $Source)) { Fail "Android signed output not found: $Source" }
             Copy-Item $Source (Join-Path out/artifacts $Outputs[$Source]) -Force
             Copy-Item $Source out/stage/android -Force
         }
-        Show-Artifact "$Root/out/artifacts/md4a-$Version-android-debug.apk" "debug-signed local-test package"
-        Show-Artifact "$Root/out/artifacts/md4a-$Version-android-unsigned.apk" "unsigned release package"
-        Show-Artifact "$Root/out/artifacts/md4a-$Version-android-unsigned.aab" "unsigned release package"
+        Show-Artifact "$Root/out/artifacts/md4a-$Version-android.apk" "production-signed universal APK"
+        Show-Artifact "$Root/out/artifacts/md4a-$Version-android.aab" "production-signed Play upload bundle"
     }
     "windows:init" {
         Initialize-Submodules
@@ -115,31 +149,29 @@ switch ("${Platform}:${Action}") {
         foreach ($RequiredFile in $RequiredFiles) {
             if (-not (Test-Path (Join-Path $Source $RequiredFile))) { Fail "Windows runtime file not found: $RequiredFile" }
         }
+        $AppExe = Join-Path $Source "Md4a.Windows.exe"
+        Assert-DesktopExecutable $AppExe
+        $Signed = Invoke-SignTool $AppExe
         $Stage = "out/stage/windows/md4a-$Version-windows-x64-unpackaged"
         Remove-Item out/stage/windows -Recurse -Force -ErrorAction SilentlyContinue
-        New-Item -ItemType Directory -Force $Stage, out/artifacts | Out-Null
-        Copy-Item "$Source/*" $Stage -Recurse -Force
+        New-Item -ItemType Directory -Force $Stage, "$Stage/assets", out/artifacts | Out-Null
+        foreach ($RequiredFile in $RequiredFiles) {
+            Copy-Item (Join-Path $Source $RequiredFile) (Join-Path $Stage $RequiredFile) -Force
+        }
         $Output = "$Root/out/artifacts/md4a-$Version-windows-x64-unpackaged.zip"
         Remove-Item $Output -Force -ErrorAction SilentlyContinue
         Compress-Archive -Path "$Stage/*" -DestinationPath $Output
-        Show-Artifact $Output "unsigned unpackaged diagnostic package"
+        Show-Artifact $Output $(if ($Signed) { "Authenticode-signed unpackaged diagnostic package" } else { "unsigned unpackaged diagnostic package" })
 
-        Need "iscc" "Inno Setup Compiler is required to create the Windows beta installer. Install it with Chocolatey ('choco install innosetup') and retry."
-        $Download = "$Root/out/build/windows/downloads"
-        New-Item -ItemType Directory -Force $Download | Out-Null
-        $RuntimeInstaller = Join-Path $Download "WindowsAppRuntimeInstall-x64.exe"
-        $WebViewInstaller = Join-Path $Download "MicrosoftEdgeWebview2Setup.exe"
-        if (-not (Test-Path $RuntimeInstaller)) {
-            Invoke-WebRequest "https://aka.ms/windowsappsdk/1.5/latest/windowsappruntimeinstall-x64.exe" -OutFile $RuntimeInstaller
-        }
-        if (-not (Test-Path $WebViewInstaller)) {
-            Invoke-WebRequest "https://go.microsoft.com/fwlink/p/?LinkId=2124703" -OutFile $WebViewInstaller
-        }
-        & iscc "/DAppVersion=$Version" "/DSourceDir=$Root/$Source" "/DOutputDir=$Root/out/artifacts" "/DRuntimeInstaller=$RuntimeInstaller" "/DWebViewInstaller=$WebViewInstaller" platform/windows/md4a.iss
+        Need "iscc" "Inno Setup Compiler is required to create the Windows web installer. Install it with Chocolatey ('choco install innosetup') and retry."
+        $ArtifactLabel = if ($Signed) { "signed" } else { "unsigned" }
+        & iscc "/DAppVersion=$Version" "/DSourceDir=$Root/$Source" "/DOutputDir=$Root/out/artifacts" "/DArtifactLabel=$ArtifactLabel" platform/windows/md4a.iss
         if ($LASTEXITCODE -ne 0) { Fail "Windows installer build failed." }
-        $Setup = "$Root/out/artifacts/md4a-$Version-windows-x64-setup.exe"
+        $Setup = "$Root/out/artifacts/md4a-$Version-windows-x64-setup-$ArtifactLabel.exe"
         if (-not (Test-Path $Setup)) { Fail "Windows installer output not found: $Setup" }
-        Show-Artifact $Setup "unsigned installable beta; SmartScreen warning expected"
+        if ((Get-Item $Setup).Length -ge 5MB) { Fail "Windows web installer must remain below 5 MiB (actual: $([math]::Round((Get-Item $Setup).Length / 1MB, 2)) MiB)." }
+        if ($Signed) { Invoke-SignTool $Setup | Out-Null }
+        Show-Artifact $Setup $(if ($Signed) { "Authenticode-signed web installer" } else { "unsigned web installer; SmartScreen warning expected" })
     }
     default { Fail "unsupported command: ${Platform}:${Action}" }
 }

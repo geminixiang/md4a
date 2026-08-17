@@ -1,0 +1,94 @@
+name: macOS Developer ID (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Marketing version (for example 0.1.0)
+        required: true
+      confirm_notarize:
+        description: Type NOTARIZE to sign and submit to Apple
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  sign-and-notarize:
+    if: inputs.confirm_notarize == 'NOTARIZE'
+    environment: apple-developer-id-production
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate protected signing inputs
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          DEVELOPER_ID_CERTIFICATE_P12: ${{ secrets.DEVELOPER_ID_CERTIFICATE_P12 }}
+          DEVELOPER_ID_CERTIFICATE_PASSWORD: ${{ secrets.DEVELOPER_ID_CERTIFICATE_PASSWORD }}
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
+        run: |
+          test -n "$APPLE_TEAM_ID"
+          test -n "$DEVELOPER_ID_CERTIFICATE_P12"
+          test -n "$DEVELOPER_ID_CERTIFICATE_PASSWORD"
+          test -n "$APP_STORE_CONNECT_KEY_ID"
+          test -n "$APP_STORE_CONNECT_ISSUER_ID"
+          test -n "$APP_STORE_CONNECT_API_KEY_P8"
+      - name: Install XcodeGen and signing certificate
+        env:
+          CERTIFICATE_P12: ${{ secrets.DEVELOPER_ID_CERTIFICATE_P12 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.DEVELOPER_ID_CERTIFICATE_PASSWORD }}
+        run: |
+          brew install xcodegen
+          KEYCHAIN="$RUNNER_TEMP/md4a-signing.keychain-db"
+          security create-keychain -p "$RUNNER_TEMP" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$RUNNER_TEMP" "$KEYCHAIN"
+          printf '%s' "$CERTIFICATE_P12" | base64 --decode > "$RUNNER_TEMP/developer-id.p12"
+          security import "$RUNNER_TEMP/developer-id.p12" -P "$CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$RUNNER_TEMP" "$KEYCHAIN"
+          security list-keychains -d user -s "$KEYCHAIN"
+      - name: Build signed universal app
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          cd platform/apple
+          xcodegen generate
+          xcodebuild \
+            -project md4a.xcodeproj \
+            -scheme md4aMac \
+            -configuration Release \
+            -destination 'generic/platform=macOS' \
+            -derivedDataPath "$RUNNER_TEMP/md4a-macos" \
+            ARCHS='arm64 x86_64' ONLY_ACTIVE_ARCH=NO \
+            MARKETING_VERSION='${{ inputs.version }}' \
+            CURRENT_PROJECT_VERSION='${{ github.run_number }}' \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY='Developer ID Application' \
+            build
+      - name: Notarize and staple
+        env:
+          APP_STORE_CONNECT_API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          APP="$RUNNER_TEMP/md4a-macos/Build/Products/Release/md4a.app"
+          printf '%s' "$APP_STORE_CONNECT_API_KEY_P8" > "$RUNNER_TEMP/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8"
+          ditto -c -k --keepParent "$APP" "$RUNNER_TEMP/md4a-macos.zip"
+          xcrun notarytool submit "$RUNNER_TEMP/md4a-macos.zip" --wait \
+            --key "$RUNNER_TEMP/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8" \
+            --key-id "$APP_STORE_CONNECT_KEY_ID" \
+            --issuer "$APP_STORE_CONNECT_ISSUER_ID"
+          xcrun stapler staple "$APP"
+          spctl --assess --type execute --verbose=4 "$APP"
+          ditto -c -k --keepParent "$APP" "md4a-${{ inputs.version }}-macos-universal-notarized.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-notarized
+          path: md4a-*-macos-universal-notarized.zip
+          if-no-files-found: error
+      - name: Delete temporary keychain
+        if: always()
+        run: security delete-keychain "$RUNNER_TEMP/md4a-signing.keychain-db" || true

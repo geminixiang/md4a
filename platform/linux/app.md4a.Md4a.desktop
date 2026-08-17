@@ -6,5 +6,5 @@ Exec=md4a_linux %F
 Icon=app.md4a.Md4a
 Terminal=false
 Categories=Utility;TextEditor;
-MimeType=text/markdown;text/plain;
+MimeType=text/markdown;text/x-markdown;
 StartupNotify=true

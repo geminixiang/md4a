@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "default_handler.h"
 #include "md4a/md4a.h"
 
 typedef struct {
@@ -33,6 +34,69 @@ static const char *PAGE_PREFIX =
     "collapse:collapse;}th,td{border:1px solid #888;padding:.35rem .6rem;}</style>"
     "</head><body>";
 static const char *PAGE_SUFFIX = "</body></html>";
+static const char *PREFERENCES_GROUP = "onboarding";
+static const char *DEFAULT_HANDLER_ASKED_KEY = "default-handler-asked";
+
+static char *preferences_path(void) {
+  return g_build_filename(g_get_user_config_dir(), "md4a", "preferences.ini",
+                          NULL);
+}
+
+static gboolean default_handler_was_asked(void) {
+  GKeyFile *preferences = g_key_file_new();
+  char *path = preferences_path();
+  gboolean asked = g_key_file_load_from_file(preferences, path, G_KEY_FILE_NONE,
+                                              NULL) &&
+                   g_key_file_get_boolean(preferences, PREFERENCES_GROUP,
+                                          DEFAULT_HANDLER_ASKED_KEY, NULL);
+  g_free(path);
+  g_key_file_unref(preferences);
+  return asked;
+}
+
+static void remember_default_handler_was_asked(void) {
+  GKeyFile *preferences = g_key_file_new();
+  char *path = preferences_path();
+  char *directory = g_path_get_dirname(path);
+  GError *error = NULL;
+
+  g_key_file_load_from_file(preferences, path, G_KEY_FILE_NONE, NULL);
+  g_key_file_set_boolean(preferences, PREFERENCES_GROUP,
+                         DEFAULT_HANDLER_ASKED_KEY, TRUE);
+  if (g_mkdir_with_parents(directory, 0700) != 0 ||
+      !g_key_file_save_to_file(preferences, path, &error)) {
+    g_warning("Could not save onboarding preference: %s",
+              error == NULL ? "could not create the configuration directory"
+                            : error->message);
+  }
+  g_clear_error(&error);
+  g_free(directory);
+  g_free(path);
+  g_key_file_unref(preferences);
+}
+
+static gboolean run_xdg_mime(const char *operation, const char *argument,
+                             const char *mime_type, char **stdout_text,
+                             GError **error) {
+  const char *argv[] = {"xdg-mime", operation, argument, mime_type, NULL};
+  int exit_status = 0;
+
+  if (!g_spawn_sync(NULL, (char **)argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL,
+                    stdout_text, NULL, &exit_status, error)) {
+    return FALSE;
+  }
+  return g_spawn_check_wait_status(exit_status, error);
+}
+
+static gboolean markdown_handler_is_default(const char *mime_type,
+                                             GError **error) {
+  char *output = NULL;
+  gboolean succeeded = run_xdg_mime("query", "default", mime_type, &output,
+                                    error);
+  gboolean matches = succeeded && md4a_handler_output_matches(output);
+  g_free(output);
+  return matches;
+}
 
 static void show_error(Editor *editor, const char *heading, const char *detail) {
   GtkAlertDialog *dialog = gtk_alert_dialog_new("%s", heading);
@@ -118,7 +182,8 @@ static void load_finished(GObject *source, GAsyncResult *result, gpointer data) 
     return;
   }
   if (length > G_MAXINT) {
-    show_error(editor, "File could not be opened", "The file is too large to edit.");
+    show_error(editor, "File could not be opened",
+               "The file is too large to edit.");
     g_free(contents);
     return;
   }
@@ -297,23 +362,94 @@ static GtkWidget *create_editor_view(Editor *editor) {
   return GTK_WIDGET(view);
 }
 
+static void default_handler_chosen(GObject *source, GAsyncResult *result,
+                                   gpointer data) {
+  Editor *editor = data;
+  GError *error = NULL;
+  int choice = gtk_alert_dialog_choose_finish(GTK_ALERT_DIALOG(source), result,
+                                               &error);
+  remember_default_handler_was_asked();
+
+  if (error != NULL) {
+    if (!g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
+      show_error(editor, "Default app preference could not be changed",
+                 error->message);
+    }
+    g_error_free(error);
+    return;
+  }
+  if (choice != 1) {
+    return;
+  }
+
+  if (!run_xdg_mime("default", MD4A_DESKTOP_ID, "text/markdown", NULL,
+                    &error) ||
+      !run_xdg_mime("default", MD4A_DESKTOP_ID, "text/x-markdown", NULL,
+                    &error)) {
+    char *detail = g_strdup_printf(
+        "%s\n\nEnsure xdg-utils is installed, then choose md4a in your "
+        "desktop environment's Default Applications or file Properties panel.",
+        error == NULL ? "xdg-mime did not complete successfully."
+                      : error->message);
+    show_error(editor, "md4a could not be made the default", detail);
+    g_free(detail);
+    g_clear_error(&error);
+    return;
+  }
+
+  if (!markdown_handler_is_default("text/markdown", &error) ||
+      !markdown_handler_is_default("text/x-markdown", &error)) {
+    char *detail = g_strdup_printf(
+        "%s\n\nYour desktop may manage defaults itself. Open Default "
+        "Applications or a Markdown file's Properties panel and select md4a.",
+        error == NULL ? "The desktop did not report md4a as the default for all "
+                        "Markdown MIME types."
+                      : error->message);
+    show_error(editor, "Default app setting needs confirmation", detail);
+    g_free(detail);
+    g_clear_error(&error);
+  }
+}
+
+static void ask_default_handler(Editor *editor) {
+  const char *buttons[] = {"Not Now", "Make Default", NULL};
+  GtkAlertDialog *dialog = gtk_alert_dialog_new(
+      "Make md4a your default app for Markdown files?");
+  gtk_alert_dialog_set_detail(
+      dialog, "This changes only Markdown file associations. Plain text files "
+              "will keep their current default app.");
+  gtk_alert_dialog_set_buttons(dialog, buttons);
+  gtk_alert_dialog_set_cancel_button(dialog, 0);
+  gtk_alert_dialog_set_default_button(dialog, 1);
+  gtk_alert_dialog_choose(dialog, editor->window, NULL, default_handler_chosen,
+                          editor);
+  g_object_unref(dialog);
+}
+
+static void choose_default_handler(GSimpleAction *action, GVariant *parameter,
+                                   gpointer data) {
+  (void)action;
+  (void)parameter;
+  ask_default_handler(data);
+}
+
 static void add_actions(Editor *editor) {
   static const GActionEntry entries[] = {
       {"open", open_document, NULL, NULL, NULL},
       {"save", save_document, NULL, NULL, NULL},
       {"save-as", save_document_as, NULL, NULL, NULL},
+      {"make-default", choose_default_handler, NULL, NULL, NULL},
   };
   g_action_map_add_action_entries(G_ACTION_MAP(editor->window), entries,
                                   G_N_ELEMENTS(entries), editor);
 }
 
-static void activate(GtkApplication *application, gpointer data) {
+static Editor *create_editor(GtkApplication *application) {
   Editor *editor = g_new0(Editor, 1);
   GtkWidget *paned = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
   GtkWidget *editor_scroll = gtk_scrolled_window_new();
   GtkWidget *preview_scroll = gtk_scrolled_window_new();
   GtkWidget *editor_view;
-  (void)data;
 
   editor->window = GTK_WINDOW(gtk_application_window_new(application));
   g_object_set_data_full(G_OBJECT(editor->window), "md4a-editor", editor,
@@ -344,6 +480,31 @@ static void activate(GtkApplication *application, gpointer data) {
   update_title(editor);
   render_preview(editor);
   gtk_window_present(editor->window);
+  return editor;
+}
+
+static void activate(GtkApplication *application, gpointer data) {
+  Editor *editor;
+  (void)data;
+  editor = create_editor(application);
+  if (!default_handler_was_asked()) {
+    ask_default_handler(editor);
+  }
+}
+
+static void open_files(GApplication *application, GFile **files, gint file_count,
+                       const char *hint, gpointer data) {
+  gint index;
+  (void)hint;
+  (void)data;
+
+  for (index = 0; index < file_count; index++) {
+    Editor *editor = create_editor(GTK_APPLICATION(application));
+    g_file_load_contents_async(files[index], NULL, load_finished, editor);
+    if (index == 0 && !default_handler_was_asked()) {
+      ask_default_handler(editor);
+    }
+  }
 }
 
 static void startup(GtkApplication *application, gpointer data) {
@@ -353,6 +514,7 @@ static void startup(GtkApplication *application, gpointer data) {
   g_menu_append(file, "Open…", "win.open");
   g_menu_append(file, "Save", "win.save");
   g_menu_append(file, "Save As…", "win.save-as");
+  g_menu_append(file, "Make Default for Markdown…", "win.make-default");
   g_menu_append_submenu(menu, "File", G_MENU_MODEL(file));
   gtk_application_set_menubar(application, G_MENU_MODEL(menu));
   gtk_application_set_accels_for_action(application, "win.open",
@@ -368,10 +530,11 @@ static void startup(GtkApplication *application, gpointer data) {
 
 int main(int argc, char **argv) {
   GtkApplication *application = gtk_application_new(
-      "app.md4a.Md4a", G_APPLICATION_DEFAULT_FLAGS);
+      "app.md4a.Md4a", G_APPLICATION_HANDLES_OPEN);
   int status;
   g_signal_connect(application, "startup", G_CALLBACK(startup), NULL);
   g_signal_connect(application, "activate", G_CALLBACK(activate), NULL);
+  g_signal_connect(application, "open", G_CALLBACK(open_files), NULL);
   status = g_application_run(G_APPLICATION(application), argc, argv);
   g_object_unref(application);
   return status;

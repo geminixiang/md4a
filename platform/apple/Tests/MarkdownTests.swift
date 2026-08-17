@@ -8,6 +8,26 @@ import WebKit
 #endif
 
 final class MarkdownTests: XCTestCase {
+    func testDefaultAppOnboardingOffersOnlyBeforeUserDecision() {
+        var onboarding = MarkdownDefaultAppOnboarding(decision: .notAsked)
+        XCTAssertTrue(onboarding.shouldOfferInWelcome)
+
+        onboarding.dismiss()
+        XCTAssertEqual(onboarding.decision, .dismissed)
+        XCTAssertFalse(onboarding.shouldOfferInWelcome)
+
+        onboarding.resetForSettings()
+        XCTAssertTrue(onboarding.shouldOfferInWelcome)
+        onboarding.confirmRequest()
+        XCTAssertEqual(onboarding.decision, .requested)
+        XCTAssertFalse(onboarding.shouldOfferInWelcome)
+    }
+
+    func testMarkdownTypeUsesImportedDaringFireballIdentifier() {
+        XCTAssertEqual(MarkdownDocument.markdownType.identifier, "net.daringfireball.markdown")
+        XCTAssertTrue(MarkdownDocument.readableContentTypes.contains(MarkdownDocument.markdownType))
+    }
+
     func testRendererUsesGFMAndSuppressesRawHTML() throws {
         let html = try MarkdownRenderer.render("~~old~~\n\n<script>alert(1)</script>")
         XCTAssertTrue(html.contains("<del>old</del>"))

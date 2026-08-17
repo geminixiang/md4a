@@ -21,7 +21,6 @@
                 <data android:mimeType="text/markdown" />
                 <data android:mimeType="text/x-markdown" />
                 <data android:mimeType="application/markdown" />
-                <data android:mimeType="text/plain" />
             </intent-filter>
             <!-- Some file providers use a generic MIME type and rely on the
                  filename. Keep these in separate filters: Android combines

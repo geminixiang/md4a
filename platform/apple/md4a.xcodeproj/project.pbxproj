@@ -8,12 +8,15 @@
 
 /* Begin PBXBuildFile section */
 		03D6BCA9355215503A006F45 /* DocumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01143C73DAA97C845DCD60FF /* DocumentView.swift */; };
+		0B84A0914C8D2DC8E447C1C2 /* MarkdownDefaultAppOnboarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B2B5292A1DC64378C05FDAA /* MarkdownDefaultAppOnboarding.swift */; };
 		17916D75DA88AD4999060617 /* MarkdownDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4359C648B77E1A86C9D6F1 /* MarkdownDocument.swift */; };
 		1931FB9F29710268CD07CA94 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ABFFC88A7D8D2075F7167432 /* Assets.xcassets */; };
 		19D4C4163CE2717A40993C9E /* md4a.c in Sources */ = {isa = PBXBuildFile; fileRef = 77C1AF5F58AE959890F95640 /* md4a.c */; };
 		1A548835CC0DA940DCDFE35D /* ApplePieceTree.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62C9C1F8493E0E40E99318BF /* ApplePieceTree.swift */; };
 		21FE3C40644BDF059E461D37 /* entity.c in Sources */ = {isa = PBXBuildFile; fileRef = E6CC936185C7BA03E76430D9 /* entity.c */; };
+		253E431A908364F30BF91307 /* MarkdownDefaultAppSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C230A9017427E869603284DB /* MarkdownDefaultAppSettingsView.swift */; };
 		2991D09D60DB5EF0CB5F444B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 43B87D31BDF22F96B240D29C /* Assets.xcassets */; };
+		3D2DF98DE82E1B4BEDB0BDFF /* WorkspaceMarkdownDefaultApplicationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDC56DAE572EA1174A709FC3 /* WorkspaceMarkdownDefaultApplicationService.swift */; };
 		443558FCC7FAEACFD86184CE /* AppleUnicodeEditorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E684320E800E1FA058AD17E7 /* AppleUnicodeEditorTests.swift */; };
 		4F061B741E9B2FB14EA611E6 /* AppleUnicodeEditorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E684320E800E1FA058AD17E7 /* AppleUnicodeEditorTests.swift */; };
 		4FD7A4BFEAD1C37C20763E7F /* AppleLargeDocumentCoreBenchmarks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F2C3D554D38ED5D0EA55D93 /* AppleLargeDocumentCoreBenchmarks.swift */; };
@@ -32,6 +35,8 @@
 		857BDC976820909E1589A144 /* md4a.c in Sources */ = {isa = PBXBuildFile; fileRef = 77C1AF5F58AE959890F95640 /* md4a.c */; };
 		870DCB2037E8B5CBE64B4E08 /* AppleLargeDocumentCoreBenchmarks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F2C3D554D38ED5D0EA55D93 /* AppleLargeDocumentCoreBenchmarks.swift */; };
 		8986388EBBAF52E056E1E6A5 /* entity.c in Sources */ = {isa = PBXBuildFile; fileRef = E6CC936185C7BA03E76430D9 /* entity.c */; };
+		928CE659DBBFB6644A212C88 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E384077A93604A7E5FDDCBD8 /* PrivacyInfo.xcprivacy */; };
+		943C70A642E7AA896553D9B7 /* MarkdownDefaultAppOnboarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B2B5292A1DC64378C05FDAA /* MarkdownDefaultAppOnboarding.swift */; };
 		9D8FB04AC6D44CEB4BD19535 /* AppleLargeDocumentUIBenchmarks.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA260460CEE36B90B007391E /* AppleLargeDocumentUIBenchmarks.swift */; };
 		A9D7D062ADE207BEF8968EE7 /* md4c-html.c in Sources */ = {isa = PBXBuildFile; fileRef = ED4EBA80105FE131291CD528 /* md4c-html.c */; };
 		B5714A1A65788D46D1A46BED /* AppleViewportEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E123285CACE116B26B89603 /* AppleViewportEditor.swift */; };
@@ -50,6 +55,7 @@
 		DE6646FB5089562B2940E9AA /* md4c.c in Sources */ = {isa = PBXBuildFile; fileRef = EB9A4533E6ECF637CE6E4B60 /* md4c.c */; };
 		E88574DB9AADCFAC98857F20 /* AppleDocumentSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = E08B595978782FD5F379BB95 /* AppleDocumentSession.swift */; };
 		F1D80ED30CFE4F47EBCAC350 /* AppleBenchmarkSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D5F81A2E5BA23AA1E1CEE9C /* AppleBenchmarkSupport.swift */; };
+		F4A510E29F84B04F13F57DA7 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E384077A93604A7E5FDDCBD8 /* PrivacyInfo.xcprivacy */; };
 		FB269ADC1ACED2E73F24A808 /* MarkdownRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26587919F672968E15807CD6 /* MarkdownRenderer.swift */; };
 /* End PBXBuildFile section */
 
@@ -102,15 +108,19 @@
 		90B21B738CAFA1AE92048497 /* ApplePieceTreeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplePieceTreeTests.swift; sourceTree = "<group>"; };
 		94F2C8F72236C3AFF0EA2AAA /* PreviewWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewWebView.swift; sourceTree = "<group>"; };
 		981B73E89D1EF4162EE05877 /* md4aiOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = md4aiOSApp.swift; sourceTree = "<group>"; };
+		9B2B5292A1DC64378C05FDAA /* MarkdownDefaultAppOnboarding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownDefaultAppOnboarding.swift; sourceTree = "<group>"; };
 		9F2C3D554D38ED5D0EA55D93 /* AppleLargeDocumentCoreBenchmarks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleLargeDocumentCoreBenchmarks.swift; sourceTree = "<group>"; };
 		AA260460CEE36B90B007391E /* AppleLargeDocumentUIBenchmarks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleLargeDocumentUIBenchmarks.swift; sourceTree = "<group>"; };
 		ABFFC88A7D8D2075F7167432 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AC185F6C2CA7B02A8C395AC9 /* md4aMacBenchmarks.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = md4aMacBenchmarks.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C230A9017427E869603284DB /* MarkdownDefaultAppSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownDefaultAppSettingsView.swift; sourceTree = "<group>"; };
 		C43FFC8D64AA4CE6C621BD80 /* md4aMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = md4aMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C7A7CE3736B9A799AE87A50A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		CDC56DAE572EA1174A709FC3 /* WorkspaceMarkdownDefaultApplicationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceMarkdownDefaultApplicationService.swift; sourceTree = "<group>"; };
 		D08EDAFACD84C0D73507605B /* NativeDocumentEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeDocumentEditor.swift; sourceTree = "<group>"; };
 		DE15252DBCA36B8BE4BB7FF5 /* AppleLineLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleLineLayout.swift; sourceTree = "<group>"; };
 		E08B595978782FD5F379BB95 /* AppleDocumentSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleDocumentSession.swift; sourceTree = "<group>"; };
+		E384077A93604A7E5FDDCBD8 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		E684320E800E1FA058AD17E7 /* AppleUnicodeEditorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleUnicodeEditorTests.swift; sourceTree = "<group>"; };
 		E6CC936185C7BA03E76430D9 /* entity.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = entity.c; sourceTree = "<group>"; };
 		EB9A4533E6ECF637CE6E4B60 /* md4c.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = md4c.c; sourceTree = "<group>"; };
@@ -159,7 +169,9 @@
 			children = (
 				43B87D31BDF22F96B240D29C /* Assets.xcassets */,
 				C7A7CE3736B9A799AE87A50A /* Info.plist */,
+				C230A9017427E869603284DB /* MarkdownDefaultAppSettingsView.swift */,
 				6EF79B36C754A52299DB73F6 /* md4aMacApp.swift */,
+				CDC56DAE572EA1174A709FC3 /* WorkspaceMarkdownDefaultApplicationService.swift */,
 			);
 			path = macOS;
 			sourceTree = "<group>";
@@ -217,11 +229,13 @@
 				62C9C1F8493E0E40E99318BF /* ApplePieceTree.swift */,
 				1E123285CACE116B26B89603 /* AppleViewportEditor.swift */,
 				01143C73DAA97C845DCD60FF /* DocumentView.swift */,
+				9B2B5292A1DC64378C05FDAA /* MarkdownDefaultAppOnboarding.swift */,
 				1F4359C648B77E1A86C9D6F1 /* MarkdownDocument.swift */,
 				26587919F672968E15807CD6 /* MarkdownRenderer.swift */,
 				ED6EDC7D303648919A6DCC2A /* md4a-Bridging-Header.h */,
 				D08EDAFACD84C0D73507605B /* NativeDocumentEditor.swift */,
 				94F2C8F72236C3AFF0EA2AAA /* PreviewWebView.swift */,
+				E384077A93604A7E5FDDCBD8 /* PrivacyInfo.xcprivacy */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -378,6 +392,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1931FB9F29710268CD07CA94 /* Assets.xcassets in Resources */,
+				928CE659DBBFB6644A212C88 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -386,6 +401,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2991D09D60DB5EF0CB5F444B /* Assets.xcassets in Resources */,
+				F4A510E29F84B04F13F57DA7 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -422,6 +438,7 @@
 				1A548835CC0DA940DCDFE35D /* ApplePieceTree.swift in Sources */,
 				B5714A1A65788D46D1A46BED /* AppleViewportEditor.swift in Sources */,
 				5EF8F042424F123E2210A08F /* DocumentView.swift in Sources */,
+				0B84A0914C8D2DC8E447C1C2 /* MarkdownDefaultAppOnboarding.swift in Sources */,
 				54206969DE4F85598608CDC4 /* MarkdownDocument.swift in Sources */,
 				C0FC10D455992E9F5BD944BA /* MarkdownRenderer.swift in Sources */,
 				574F2FEE1F92F02849FA29D1 /* NativeDocumentEditor.swift in Sources */,
@@ -443,10 +460,13 @@
 				BA4A3697FAD30C52D715B9A0 /* ApplePieceTree.swift in Sources */,
 				7D537C51471700E919782D31 /* AppleViewportEditor.swift in Sources */,
 				03D6BCA9355215503A006F45 /* DocumentView.swift in Sources */,
+				943C70A642E7AA896553D9B7 /* MarkdownDefaultAppOnboarding.swift in Sources */,
+				253E431A908364F30BF91307 /* MarkdownDefaultAppSettingsView.swift in Sources */,
 				17916D75DA88AD4999060617 /* MarkdownDocument.swift in Sources */,
 				FB269ADC1ACED2E73F24A808 /* MarkdownRenderer.swift in Sources */,
 				C7166061B202DAE14B56BF71 /* NativeDocumentEditor.swift in Sources */,
 				C4AF0777BD5B8E283E68AD88 /* PreviewWebView.swift in Sources */,
+				3D2DF98DE82E1B4BEDB0BDFF /* WorkspaceMarkdownDefaultApplicationService.swift in Sources */,
 				8986388EBBAF52E056E1E6A5 /* entity.c in Sources */,
 				19D4C4163CE2717A40993C9E /* md4a.c in Sources */,
 				D36ECF74295E712E51C90ADD /* md4aMacApp.swift in Sources */,
@@ -507,8 +527,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_TESTABILITY = YES;
 				INFOPLIST_FILE = macOS/Info.plist;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -679,8 +701,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_TESTABILITY = YES;
 				INFOPLIST_FILE = macOS/Info.plist;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -701,6 +725,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				ENABLE_TESTABILITY = YES;
 				INFOPLIST_FILE = iOS/Info.plist;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -723,6 +748,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				ENABLE_TESTABILITY = YES;
 				INFOPLIST_FILE = iOS/Info.plist;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
