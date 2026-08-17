@@ -115,10 +115,9 @@ jobs:
           profile: pixel_6
           disable-animations: true
           script: |
-            apk="out/artifacts/md4a-${VERSION}-android.apk"
-            adb install "$apk"
+            apk=$(find out/artifacts -maxdepth 1 -name 'md4a-*-android.apk' -print -quit); test -n "$apk"; adb install "$apk"
             # A second install exercises Android's same-package, same-certificate upgrade path.
-            adb install -r "$apk"
+            apk=$(find out/artifacts -maxdepth 1 -name 'md4a-*-android.apk' -print -quit); test -n "$apk"; adb install -r "$apk"
             adb shell am force-stop app.md4a
             adb shell monkey -p app.md4a -c android.intent.category.LAUNCHER 1
             sleep 3
@@ -169,8 +168,9 @@ jobs:
       - name: Install, launch, and uninstall smoke test
         shell: pwsh
         run: |
-          $setup = Get-ChildItem out/artifacts/md4a-*-windows-x64-setup-*.exe | Select-Object -Single
-          ./tools/windows-smoke.ps1 -SetupPath $setup.FullName
+          $setups = @(Get-ChildItem out/artifacts/md4a-*-windows-x64-setup-*.exe)
+          if ($setups.Count -ne 1) { throw "Expected exactly one Windows setup, found $($setups.Count)" }
+          ./tools/windows-smoke.ps1 -SetupPath $setups[0].FullName
       - uses: actions/upload-artifact@v4
         with:
           name: windows
