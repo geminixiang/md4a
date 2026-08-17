@@ -15,8 +15,27 @@
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
                 <data android:mimeType="text/markdown" />
+                <data android:mimeType="text/x-markdown" />
+                <data android:mimeType="application/markdown" />
                 <data android:mimeType="text/plain" />
+            </intent-filter>
+            <!-- Some file providers use a generic MIME type and rely on the
+                 filename. Keep these in separate filters: Android combines
+                 data attributes within one filter. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:mimeType="*/*" />
+                <data android:pathPattern=".*\\.md" />
+                <data android:pathPattern=".*\\.markdown" />
+                <data android:pathPattern=".*\\.mdown" />
+                <data android:pathPattern=".*\\.mkd" />
+                <data android:pathPattern=".*\\.mkdn" />
             </intent-filter>
         </activity>
     </application>

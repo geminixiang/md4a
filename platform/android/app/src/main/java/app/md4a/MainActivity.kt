@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -38,6 +39,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
     private val document: DocumentViewModel by viewModels()
@@ -144,11 +147,23 @@ private fun MarkdownScreen(document: DocumentViewModel = viewModel()) {
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = { preview = !preview }, enabled = preview) { Text("Edit") }
-                Button(onClick = { preview = !preview }, enabled = !preview) { Text("Preview") }
+                val showingPreview = preview || !document.isEditable
+                Button(onClick = { preview = false }, enabled = showingPreview && document.isEditable) { Text("Edit") }
+                Button(onClick = { preview = true }, enabled = !showingPreview) { Text("Preview") }
+                if (!document.isEditable) {
+                    Text(
+                        "Large document · viewing unavailable",
+                        modifier = Modifier.padding(vertical = 12.dp),
+                        style = MaterialTheme.typography.labelMedium,
+                    )
+                }
             }
             Box(Modifier.fillMaxSize().padding(12.dp)) {
-                if (preview) {
+                if (!document.isEditable) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
+                        Text("This document is too large to edit or preview safely, but it was opened successfully.")
+                    }
+                } else if (preview) {
                     Preview(document.markdown)
                 } else {
                     BasicTextField(
@@ -166,10 +181,31 @@ private fun MarkdownScreen(document: DocumentViewModel = viewModel()) {
 
 @Composable
 private fun Preview(markdown: String) {
-    val html = remember(markdown) {
-        runCatching { previewDocument(NativeRenderer.render(markdown)) }
-            .getOrElse { previewDocument("<p>Preview failed: ${it.message ?: "unknown error"}</p>") }
+    var html by remember(markdown) { mutableStateOf<String?>(null) }
+    var renderError by remember(markdown) { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(markdown) {
+        val result = withContext(Dispatchers.Default) {
+            runCatching { previewDocument(NativeRenderer.render(markdown)) }
+        }
+        result.fold(
+            onSuccess = { html = it },
+            onFailure = { renderError = it.message ?: "Unknown error" },
+        )
     }
+
+    val document = html
+    if (document == null) {
+        Box(Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
+            if (renderError == null) {
+                CircularProgressIndicator()
+            } else {
+                Text("Preview failed: $renderError")
+            }
+        }
+        return
+    }
+
     AndroidView(
         modifier = Modifier.fillMaxSize(),
         factory = { context ->
@@ -183,9 +219,9 @@ private fun Preview(markdown: String) {
             }
         },
         update = { webView ->
-            if (webView.tag != html) {
-                webView.tag = html
-                webView.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null)
+            if (webView.tag != document) {
+                webView.tag = document
+                webView.loadDataWithBaseURL(null, document, "text/html", "UTF-8", null)
             }
         },
     )
