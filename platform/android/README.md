@@ -21,14 +21,22 @@ No multiplatform, cross-platform UI, shared ViewModel, networking, accounts, or 
 
 ## Build and test
 
-From this directory, using an installed Gradle 8.9 or a generated Gradle wrapper:
+From the repository root, the supported developer interface uses [Task](https://taskfile.dev/):
 
 ```sh
-gradle testDebugUnitTest
-gradle assembleDebug
+task android:init
+task android:build VERSION=0.2.0 BUILD_NUMBER=42
 ```
 
-Set `sdk.dir` in an untracked `local.properties` when `ANDROID_HOME` is not configured.
+`init` checks JDK 17 and the required Android SDK components, initializes submodules, and restores with the checked-in Gradle 8.9 wrapper. It does not install SDK components or accept licenses. `build` runs unit tests and writes a debug-signed APK plus unsigned release APK/AAB to `out/artifacts`.
+
+Native fallback from this directory:
+
+```sh
+./gradlew testDebugUnitTest assembleDebug assembleRelease bundleRelease
+```
+
+On Windows use `gradlew.bat`. Set `sdk.dir` in an untracked `local.properties` when `ANDROID_HOME` is not configured.
 
 ## Behavior
 

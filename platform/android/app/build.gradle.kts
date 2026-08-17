@@ -5,6 +5,11 @@ plugins {
 }
 
 android {
+    val redirectedBuildDir = providers.gradleProperty("md4aBuildDir")
+    if (redirectedBuildDir.isPresent) {
+        layout.buildDirectory.set(file(redirectedBuildDir.get()))
+    }
+
     namespace = "app.md4a"
     compileSdk = 35
 
@@ -12,7 +17,9 @@ android {
         applicationId = "app.md4a"
         minSdk = 26
         targetSdk = 35
-        versionCode = System.getenv("MD4A_VERSION_CODE")?.toIntOrNull() ?: 1
+        versionCode = System.getenv("MD4A_VERSION_CODE")?.toIntOrNull()
+            ?: if (System.getenv("MD4A_VERSION_CODE") == null) 1
+            else error("MD4A_VERSION_CODE must be a valid integer")
         versionName = System.getenv("MD4A_VERSION_NAME") ?: "0.1.0"
 
         externalNativeBuild {

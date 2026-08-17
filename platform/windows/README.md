@@ -17,7 +17,16 @@ The project pins Windows App SDK `1.5.240311000`. Package restore supplies C++/W
 
 ## Build
 
-From a Developer PowerShell for Visual Studio, in this directory:
+From a Developer PowerShell for Visual Studio at the repository root, use the Task interface:
+
+```powershell
+task windows:init
+task windows:build VERSION=0.2.0 BUILD_NUMBER=42
+```
+
+`init` checks prerequisites, initializes submodules, and restores NuGet packages without installing software. `build` creates an unsigned x64 unpackaged zip in `out/artifacts`. Task can be installed with `winget install Task.Task`; see the root README for all Task installation options.
+
+Native fallback from this directory:
 
 ```powershell
 msbuild .\md4a-windows.sln /restore /p:Configuration=Debug /p:Platform=x64

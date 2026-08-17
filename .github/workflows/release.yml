@@ -9,119 +9,69 @@ on:
 permissions:
   contents: read
 
+env:
+  BUILD_NUMBER: ${{ github.run_number }}
+
 jobs:
   core:
     name: Core tests
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - name: Build and test
-        run: |
-          cmake -S . -B build -DMD4A_BUILD_TESTS=ON
-          cmake --build build
-          ctest --test-dir build --output-on-failure
+      - uses: arduino/setup-task@v2
+      - run: task core:build
 
   macos:
     name: macOS package
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
+      - uses: arduino/setup-task@v2
+      - name: Set version
+        run: if [[ "$GITHUB_REF_TYPE" == tag ]]; then echo "VERSION=${GITHUB_REF_NAME#v}"; else echo "VERSION=0.0.0-dev"; fi >> "$GITHUB_ENV"
       - name: Install XcodeGen
         run: brew install xcodegen
-      - name: Build app
-        run: |
-          cd platform/apple
-          xcodegen generate
-          VERSION="${GITHUB_REF_NAME#v}"
-          if [[ "$GITHUB_REF_TYPE" != "tag" ]]; then VERSION="0.0.0-dev"; fi
-          xcodebuild -project md4a.xcodeproj -scheme md4aMac \
-            -configuration Release -destination 'generic/platform=macOS' \
-            -derivedDataPath "$RUNNER_TEMP/md4a-macos" \
-            ARCHS='arm64 x86_64' ONLY_ACTIVE_ARCH=NO \
-            MARKETING_VERSION="$VERSION" \
-            CURRENT_PROJECT_VERSION="$GITHUB_RUN_NUMBER" \
-            CODE_SIGNING_ALLOWED=NO build
-      - name: Package app
-        run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          if [[ "$GITHUB_REF_TYPE" != "tag" ]]; then VERSION="0.0.0-dev"; fi
-          APP="$RUNNER_TEMP/md4a-macos/Build/Products/Release/md4a.app"
-          ditto -c -k --sequesterRsrc --keepParent "$APP" \
-            "md4a-${VERSION}-macos-universal-unsigned.zip"
+      - run: task macos:build
       - uses: actions/upload-artifact@v4
         with:
           name: macos
-          path: md4a-*-macos-universal-unsigned.zip
+          path: out/artifacts/md4a-*-macos-universal-unsigned.zip
           if-no-files-found: error
 
   ios-check:
-    name: iOS build check
+    name: iOS local package check
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
+      - uses: arduino/setup-task@v2
+      - name: Set version
+        run: if [[ "$GITHUB_REF_TYPE" == tag ]]; then echo "VERSION=${GITHUB_REF_NAME#v}"; else echo "VERSION=0.0.0-dev"; fi >> "$GITHUB_ENV"
       - name: Install XcodeGen
         run: brew install xcodegen
-      - name: Build Simulator target
-        run: |
-          cd platform/apple
-          xcodegen generate
-          VERSION="${GITHUB_REF_NAME#v}"
-          if [[ "$GITHUB_REF_TYPE" != "tag" ]]; then VERSION="0.0.0-dev"; fi
-          xcodebuild -project md4a.xcodeproj -scheme md4aiOS \
-            -configuration Release -sdk iphonesimulator \
-            -destination 'generic/platform=iOS Simulator' \
-            -derivedDataPath "$RUNNER_TEMP/md4a-ios" \
-            MARKETING_VERSION="$VERSION" \
-            CURRENT_PROJECT_VERSION="$GITHUB_RUN_NUMBER" \
-            CODE_SIGNING_ALLOWED=NO build
+      - run: task ios:build
 
   android:
     name: Android package
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
+      - uses: arduino/setup-task@v2
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
       - uses: android-actions/setup-android@v3
-      - uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: "8.9"
+      - name: Set version
+        run: if [[ "$GITHUB_REF_TYPE" == tag ]]; then echo "VERSION=${GITHUB_REF_NAME#v}"; else echo "VERSION=0.0.0-dev"; fi >> "$GITHUB_ENV"
       - name: Install native toolchain
         run: sdkmanager "platforms;android-35" "build-tools;35.0.0" "ndk;27.2.12479018" "cmake;3.22.1"
-      - name: Test and build
-        working-directory: platform/android
-        env:
-          MD4A_VERSION_NAME: ${{ github.ref_name }}
-          MD4A_VERSION_CODE: ${{ github.run_number }}
-        run: |
-          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
-            export MD4A_VERSION_NAME="${MD4A_VERSION_NAME#v}"
-          else
-            export MD4A_VERSION_NAME="0.0.0-dev"
-          fi
-          gradle --no-daemon testDebugUnitTest assembleRelease bundleRelease
-      - name: Package Android outputs
-        run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          if [[ "$GITHUB_REF_TYPE" != "tag" ]]; then VERSION="0.0.0-dev"; fi
-          cp platform/android/app/build/outputs/apk/release/app-release-unsigned.apk \
-            "md4a-${VERSION}-android-unsigned.apk"
-          cp platform/android/app/build/outputs/bundle/release/app-release.aab \
-            "md4a-${VERSION}-android-unsigned.aab"
+      - run: task android:build
       - uses: actions/upload-artifact@v4
         with:
           name: android
-          path: md4a-*-android-unsigned.*
+          path: |
+            out/artifacts/md4a-*-android-unsigned.apk
+            out/artifacts/md4a-*-android-unsigned.aab
           if-no-files-found: error
 
   windows:
@@ -129,25 +79,18 @@ jobs:
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
+      - uses: arduino/setup-task@v2
       - uses: microsoft/setup-msbuild@v2
-      - name: Build app
+      - name: Set version
         shell: pwsh
         run: |
-          msbuild platform/windows/Md4aCore.vcxproj /m /p:Configuration=Release /p:Platform=x64
-          msbuild platform/windows/Md4a.Windows.vcxproj /restore /m /p:Configuration=Release /p:Platform=x64 /p:BuildProjectReferences=false
-      - name: Package app
-        shell: pwsh
-        run: |
-          $output = "platform/windows/x64/Release"
-          if (-not (Test-Path $output)) { throw "Windows build output not found: $output" }
-          $version = if ($env:GITHUB_REF_TYPE -eq "tag") { $env:GITHUB_REF_NAME.TrimStart('v') } else { "0.0.0-dev" }
-          Compress-Archive -Path "$output/*" -DestinationPath "md4a-$version-windows-x64-unpackaged.zip"
+          $version = if ($env:GITHUB_REF_TYPE -eq "tag") { $env:GITHUB_REF_NAME.Substring(1) } else { "0.0.0-dev" }
+          "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
+      - run: task windows:build
       - uses: actions/upload-artifact@v4
         with:
           name: windows
-          path: md4a-*-windows-x64-unpackaged.zip
+          path: out/artifacts/md4a-*-windows-x64-unpackaged.zip
           if-no-files-found: error
 
   linux:
@@ -155,30 +98,18 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
+      - uses: arduino/setup-task@v2
+      - name: Set version
+        run: if [[ "$GITHUB_REF_TYPE" == tag ]]; then echo "VERSION=${GITHUB_REF_NAME#v}"; else echo "VERSION=0.0.0-dev"; fi >> "$GITHUB_ENV"
       - name: Install native dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y ninja-build libgtk-4-dev libgtksourceview-5-dev libwebkitgtk-6.0-dev
-      - name: Build app
-        run: |
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
-            -DMD4A_BUILD_TESTS=OFF -DMD4A_BUILD_LINUX_APP=ON
-          cmake --build build --target md4a_linux
-      - name: Package app
-        run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          if [[ "$GITHUB_REF_TYPE" != "tag" ]]; then VERSION="0.0.0-dev"; fi
-          ROOT="md4a-${VERSION}-linux-ubuntu24.04-x86_64"
-          mkdir -p "package/${ROOT}/bin"
-          cp build/platform/linux/md4a_linux "package/${ROOT}/bin/"
-          cp README.md LICENSE "package/${ROOT}/"
-          tar -C package -czf "${ROOT}.tar.gz" "${ROOT}"
+      - run: task linux:build
       - uses: actions/upload-artifact@v4
         with:
           name: linux
-          path: md4a-*-linux-ubuntu24.04-x86_64.tar.gz
+          path: out/artifacts/md4a-*-linux-*.tar.gz
           if-no-files-found: error
 
   publish:

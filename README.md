@@ -22,17 +22,30 @@ The first release intentionally contains only:
 - `plugins/` — built-in and example renderer packages.
 - `docs/` — architecture, package format, and research notes.
 
-## Build status
+## Developer commands
 
-The shared core and its tests are built with CMake:
+[Task](https://taskfile.dev/) is the cross-platform command interface. Install it with `brew install go-task` on macOS, the [official Linux install script or package](https://taskfile.dev/installation/), or `winget install Task.Task` on Windows. Task does not replace the native SDKs; each `*:init` command checks them, initializes recursive submodules, and performs repository-local generation/configuration/restore. It never installs system packages, accepts licenses, or configures signing credentials.
 
 ```sh
-cmake -S . -B build -G Ninja -DMD4A_BUILD_TESTS=ON
-cmake --build build
-ctest --test-dir build --output-on-failure
+task --list
+task core:init
+task core:build
+task android:init
+task android:build VERSION=0.2.0 BUILD_NUMBER=42
 ```
 
-Platform projects are deliberately independent because their native SDKs and packaging tools differ. See each platform directory for prerequisites and commands. Tagged builds and unsigned release artifacts are documented in [`docs/releases.md`](docs/releases.md).
+Available namespaces are `core`, `macos`, `ios`, `android`, `linux`, and `windows`, each with `init` and `build`. Apple commands require macOS, Linux commands require Linux, and Windows commands require Windows. `VERSION` defaults to `0.0.0-dev` and `BUILD_NUMBER` to `1`. Build artifacts go to `out/artifacts`; intermediate output uses `out/build/<platform>` and `out/stage/<platform>`. Every build reports whether its output is signed, unsigned, or debug-signed.
+
+If Task is unavailable, use the platform-native fallback commands in each platform README. Shared core fallback:
+
+```sh
+git submodule update --init --recursive
+cmake -S . -B out/build/core -DMD4A_BUILD_TESTS=ON
+cmake --build out/build/core
+ctest --test-dir out/build/core --output-on-failure
+```
+
+Tagged builds and release artifacts are documented in [`docs/releases.md`](docs/releases.md).
 
 ## Extension safety
 

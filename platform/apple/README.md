@@ -6,7 +6,18 @@ The Apple targets share document, renderer, and preview code only. No Apple UI o
 
 ## Generate and build
 
-The checked-in source of truth is `project.yml`; generate the Xcode project with [XcodeGen](https://github.com/yonaskolb/XcodeGen):
+From the repository root, use the cross-platform Task interface (Task installation is documented in the root README):
+
+```sh
+task macos:init
+task macos:build VERSION=0.2.0 BUILD_NUMBER=42
+task ios:init
+task ios:build VERSION=0.2.0 BUILD_NUMBER=42
+```
+
+These commands require macOS, Xcode, and [XcodeGen](https://github.com/yonaskolb/XcodeGen). `init` checks prerequisites and generates the project without installing tools or accepting Xcode licenses. macOS `build` runs tests and packages an unsigned universal app zip. iOS `build` packages an unsigned Simulator-only app zip. Local artifacts are under `out/artifacts`.
+
+Native fallback (the checked-in source of truth is `project.yml`):
 
 ```sh
 cd platform/apple

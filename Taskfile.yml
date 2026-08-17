@@ -1,0 +1,111 @@
+version: '3'
+
+silent: false
+
+vars:
+  VERSION: '{{default "0.0.0-dev" .VERSION}}'
+  BUILD_NUMBER: '{{default "1" .BUILD_NUMBER}}'
+
+env:
+  MD4A_DEV_VERSION: '{{.VERSION}}'
+  MD4A_DEV_BUILD_NUMBER: '{{.BUILD_NUMBER}}'
+
+tasks:
+  default:
+    desc: List developer commands
+    cmds:
+      - task --list
+
+  core:init:
+    desc: Check and configure the shared core toolchain
+    cmds:
+      - cmd: ./tools/dev.sh core init
+        platforms: [darwin, linux]
+      - cmd: powershell -NoProfile -ExecutionPolicy Bypass -File tools/dev.ps1 core init
+        platforms: [windows]
+  core:build:
+    desc: Build and test the shared core
+    deps: [core:init]
+    cmds:
+      - cmd: ./tools/dev.sh core build
+        platforms: [darwin, linux]
+      - cmd: powershell -NoProfile -ExecutionPolicy Bypass -File tools/dev.ps1 core build
+        platforms: [windows]
+
+  macos:init:
+    desc: Check and generate the macOS project (Darwin only)
+    cmds:
+      - cmd: ./tools/dev.sh macos init
+        platforms: [darwin]
+      - cmd: echo "macos:init requires macOS (Darwin)." && exit 1
+        platforms: [linux]
+      - cmd: powershell -NoProfile -Command "Write-Error 'macos:init requires macOS (Darwin).'"
+        platforms: [windows]
+  macos:build:
+    desc: Build, test, and package an unsigned universal macOS app
+    deps: [macos:init]
+    cmds:
+      - cmd: ./tools/dev.sh macos build
+        platforms: [darwin]
+
+  ios:init:
+    desc: Check and generate the iOS project (Darwin only)
+    cmds:
+      - cmd: ./tools/dev.sh ios init
+        platforms: [darwin]
+      - cmd: echo "ios:init requires macOS (Darwin)." && exit 1
+        platforms: [linux]
+      - cmd: powershell -NoProfile -Command "Write-Error 'ios:init requires macOS (Darwin).'"
+        platforms: [windows]
+  ios:build:
+    desc: Build and package an unsigned iOS Simulator app
+    deps: [ios:init]
+    cmds:
+      - cmd: ./tools/dev.sh ios build
+        platforms: [darwin]
+
+  android:init:
+    desc: Check Android prerequisites and restore the Gradle project
+    cmds:
+      - cmd: ./tools/dev.sh android init
+        platforms: [darwin, linux]
+      - cmd: powershell -NoProfile -ExecutionPolicy Bypass -File tools/dev.ps1 android init
+        platforms: [windows]
+  android:build:
+    desc: Test Android and package debug APK plus unsigned release APK/AAB
+    deps: [android:init]
+    cmds:
+      - cmd: ./tools/dev.sh android build
+        platforms: [darwin, linux]
+      - cmd: powershell -NoProfile -ExecutionPolicy Bypass -File tools/dev.ps1 android build
+        platforms: [windows]
+
+  linux:init:
+    desc: Check and configure the Linux native app (Linux only)
+    cmds:
+      - cmd: ./tools/dev.sh linux init
+        platforms: [linux]
+      - cmd: echo "linux:init requires Linux." && exit 1
+        platforms: [darwin]
+      - cmd: powershell -NoProfile -Command "Write-Error 'linux:init requires Linux.'"
+        platforms: [windows]
+  linux:build:
+    desc: Build and package the native Linux app for this host
+    deps: [linux:init]
+    cmds:
+      - cmd: ./tools/dev.sh linux build
+        platforms: [linux]
+
+  windows:init:
+    desc: Check and restore the Windows native app (Windows only)
+    cmds:
+      - cmd: powershell -NoProfile -ExecutionPolicy Bypass -File tools/dev.ps1 windows init
+        platforms: [windows]
+      - cmd: echo "windows:init requires Windows." && exit 1
+        platforms: [darwin, linux]
+  windows:build:
+    desc: Build and package the unsigned x64 unpackaged Windows app
+    deps: [windows:init]
+    cmds:
+      - cmd: powershell -NoProfile -ExecutionPolicy Bypass -File tools/dev.ps1 windows build
+        platforms: [windows]
