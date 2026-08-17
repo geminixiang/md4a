@@ -6,7 +6,7 @@ $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 $env:MD4A_SKIP_DEFAULT_APP_PROMPT = "1"
 $InstallDir = Join-Path $env:ProgramFiles "md4a"
-$AppPath = Join-Path $InstallDir "Md4a.Windows.exe"
+$AppPath = Join-Path $InstallDir "Md4a.exe"
 $SetupLogPath = Join-Path $env:RUNNER_TEMP "md4a-setup.log"
 $StartupLogPath = Join-Path $env:LOCALAPPDATA "md4a\startup.log"
 $SmokeStarted = Get-Date

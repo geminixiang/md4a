@@ -3,7 +3,7 @@
 #endif
 #define AppName "md4a"
 #define AppPublisher "md4a"
-#define AppExeName "Md4a.Windows.exe"
+#define AppExeName "Md4a.exe"
 #define AppProgId "md4a.Markdown"
 #define RuntimeUrl "https://aka.ms/windowsappsdk/1.5/latest/windowsappruntimeinstall-x64.exe"
 #define WebViewUrl "https://go.microsoft.com/fwlink/p/?LinkId=2124703"
@@ -34,8 +34,8 @@ SetupLogging=yes
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: "{#SourceDir}\Md4a.Windows.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#SourceDir}\Md4a.Windows.pri"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#SourceDir}\Md4a.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#SourceDir}\Md4a.pri"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SourceDir}\Microsoft.WindowsAppRuntime.Bootstrap.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SourceDir}\assets\md4a.ico"; DestDir: "{app}\assets"; Flags: ignoreversion
 

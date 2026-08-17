@@ -154,11 +154,11 @@ switch ("${Platform}:${Action}") {
         if ($LASTEXITCODE -ne 0) { Fail "Windows app build failed." }
         $Source = "platform/windows/x64/Release/Md4a.Windows"
         if (-not (Test-Path $Source)) { Fail "Windows app build output not found: $Source" }
-        $RequiredFiles = @("Md4a.Windows.exe", "Md4a.Windows.pri", "Microsoft.WindowsAppRuntime.Bootstrap.dll", "assets/md4a.ico")
+        $RequiredFiles = @("Md4a.exe", "Md4a.pri", "Microsoft.WindowsAppRuntime.Bootstrap.dll", "assets/md4a.ico")
         foreach ($RequiredFile in $RequiredFiles) {
             if (-not (Test-Path (Join-Path $Source $RequiredFile))) { Fail "Windows runtime file not found: $RequiredFile" }
         }
-        $AppExe = Join-Path $Source "Md4a.Windows.exe"
+        $AppExe = Join-Path $Source "Md4a.exe"
         Assert-DesktopExecutable $AppExe
         $Signed = Invoke-SignTool $AppExe
         $Stage = "out/stage/windows/md4a-$Version-windows-x64-unpackaged"
