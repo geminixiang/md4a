@@ -14,8 +14,6 @@ struct App : AppT<App> {
   App();
   void OnLaunched(Microsoft::UI::Xaml::LaunchActivatedEventArgs const& args);
 
-  static void SetInitialDocumentPath(std::optional<std::wstring> path);
-
  private:
   std::unique_ptr<md4a::windows::MainWindow> m_window;
 };
