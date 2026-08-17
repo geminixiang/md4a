@@ -210,16 +210,19 @@ class MainWindow final {
   bool m_dirty{false};
   uint64_t m_revision{0};
 };
+class App final : public ApplicationT<App> {
+ public:
+  void OnLaunched(LaunchActivatedEventArgs const&) {
+    m_window = std::make_unique<MainWindow>();
+  }
+
+ private:
+  std::unique_ptr<MainWindow> m_window;
+};
 }  // namespace
 
 int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
   init_apartment(apartment_type::single_threaded);
-  Application::Start([](auto&&) {
-    static Application application;
-    static std::unique_ptr<MainWindow> window;
-    application.Launched([](IInspectable const&, LaunchActivatedEventArgs const&) {
-      window = std::make_unique<MainWindow>();
-    });
-  });
+  Application::Start([](auto&&) { make<App>(); });
   return 0;
 }
