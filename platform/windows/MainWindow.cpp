@@ -80,6 +80,7 @@ class MainWindowImpl final : public md4a::windows::MainWindow {
     BuildUi();
     md4a::startup::Log("window.ui.complete");
     m_editor.Text(L"# Untitled\r\n\r\n");
+    m_savedText = m_editor.Text();
     md4a::startup::Log("window.initial-text.complete");
     m_dirty = false;
     UpdateTitle();
@@ -127,7 +128,7 @@ class MainWindowImpl final : public md4a::windows::MainWindow {
     m_editor.FontFamily(Microsoft::UI::Xaml::Media::FontFamily(L"Consolas"));
     m_editor.Padding(ThicknessHelper::FromUniformLength(16));
     m_editor.TextChanged([this](IInspectable const&, TextChangedEventArgs const&) {
-      m_dirty = true;
+      m_dirty = m_editor.Text() != m_savedText;
       ++m_revision;
       UpdateTitle();
       RenderPreview();
@@ -167,6 +168,7 @@ class MainWindowImpl final : public md4a::windows::MainWindow {
     }
     m_file = nullptr;
     m_editor.Text(L"");
+    m_savedText = m_editor.Text();
     m_dirty = false;
     UpdateTitle();
   }
@@ -184,6 +186,7 @@ class MainWindowImpl final : public md4a::windows::MainWindow {
     auto text = co_await FileIO::ReadTextAsync(file, Streams::UnicodeEncoding::Utf8);
     m_file = file;
     m_editor.Text(text);
+    m_savedText = text;
     m_dirty = false;
     UpdateTitle();
   }
@@ -257,12 +260,10 @@ class MainWindowImpl final : public md4a::windows::MainWindow {
 
     try {
       hstring text = m_editor.Text();
-      uint64_t revision = m_revision;
       co_await FileIO::WriteTextAsync(file, text, Streams::UnicodeEncoding::Utf8);
       m_file = file;
-      if (m_revision == revision) {
-        m_dirty = false;
-      }
+      m_savedText = text;
+      m_dirty = m_editor.Text() != m_savedText;
       UpdateTitle();
     } catch (hresult_error const& error) {
       ShowError(L"Could not save the document", error.message());
@@ -325,6 +326,7 @@ class MainWindowImpl final : public md4a::windows::MainWindow {
   TextBox m_editor;
   WebView2 m_preview;
   StorageFile m_file{nullptr};
+  hstring m_savedText;
   bool m_dirty{false};
   bool m_previewReady{false};
   uint64_t m_revision{0};
