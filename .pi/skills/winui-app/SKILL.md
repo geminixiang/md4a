@@ -1,7 +1,11 @@
 ---
 name: winui-app
-description: Bootstrap, develop, and design modern WinUI 3 desktop applications with C# and the Windows App SDK using official Microsoft guidance, WinUI Gallery patterns, Windows App SDK samples, and CommunityToolkit components. Use when creating a brand new app, preparing a machine for WinUI, reviewing, refactoring, planning, troubleshooting, environment-checking, or setting up WinUI 3 XAML, controls, navigation, windowing, theming, accessibility, responsiveness, performance, deployment, or related Windows app design and development work.
+description: Review, troubleshoot, test, and package md4a's existing native C++/WinRT WinUI 3 application using official Windows App SDK guidance and launch verification. Use for changes under platform/windows or Windows release CI; preserve the existing unpackaged C++ project and do not scaffold C# replacements or install workloads.
 ---
+
+## Mandatory md4a override
+
+Before following this skill, read [`../md4a-skill-policy/SKILL.md`](../md4a-skill-policy/SKILL.md). The md4a policy and repository conventions override conflicting upstream instructions. Do not install tools, run remote installers or `sudo`, add frameworks, scaffold a replacement project, execute signing/upload helpers, publish, or make system-level changes unless the user explicitly approved that action.
 
 # WinUI App
 
@@ -10,30 +14,7 @@ Use this skill for WinUI 3 and Windows App SDK work that needs grounded setup gu
 ## Required Flow
 
 1. Classify the task as environment/setup, new-app bootstrap, design, implementation, review, or troubleshooting.
-2. If the task is about preparing a machine for WinUI, auditing readiness, or creating a brand new app, start with the bundled setup-and-scaffold flow in this skill before broader design, implementation, or troubleshooting work:
-   - Pick the app name when the request is for a new app.
-   - Use the exact name the user gave when it is already a safe folder name.
-   - If the user did not give a name, derive a short PascalCase name from the request and state what you chose.
-   - Create the project in the user's current workspace unless they asked for another location.
-   - Do not use `--force` unless the user explicitly asked to overwrite existing files.
-   - Run the bundled WinGet configuration from the skill directory so the relative path stays exactly `config.yaml`:
-
-```powershell
-winget configure -f config.yaml --accept-configuration-agreements --disable-interactivity
-```
-
-   - Treat the configuration as intended to enable Developer Mode, install or update Visual Studio Community 2026, and install the Managed Desktop, Universal, and Windows App SDK C# components needed for WinUI development.
-   - Assess the configuration result before continuing. Continue on success. If it fails, inspect the output instead of guessing. If the `winui` template is already available and the toolchain is usable, note the partial failure and continue. If prerequisites are still missing, stop and report the blocker clearly.
-   - Verify the template is available before scaffolding:
-
-```powershell
-dotnet new list winui
-```
-
-   - For diagnostics-only environment requests, explain that the bundled bootstrap may change the machine and get confirmation before running it. If the user declines changes, use the manual verification guidance in `references/foundation-environment-audit-and-remediation.md` and summarize readiness under `present`, `missing`, `uncertain`, and `recommended optional tools`.
-   - For a brand new app, scaffold with `dotnet new winui -o <name>`. Add template options only when the user asked for them. Supported options: `-f|--framework net10.0|net9.0|net8.0`, `-slnx|--use-slnx`, `-cpm|--central-pkg-mgmt`, `-mvvm|--use-mvvm`, `-imt|--include-mvvm-toolkit`, `-un|--unpackaged`, `-nsf|--no-solution-file`, `--force`. Do not invent unsupported flags. If the user asks for packaged behavior, pass `--unpackaged false`. Otherwise keep the template default.
-   - Verify a new scaffold by confirming the expected project file exists and running `dotnet build` against the generated `.csproj`.
-   - Launch a newly scaffolded app through the correct path for its actual packaging model and confirm there is a real top-level window instead of relying only on the launcher process exit code.
+2. For md4a, skip setup/scaffold/install flows. Preserve the existing C++/WinRT project and use `task windows:init` / `task windows:build`. The upstream C#/WinGet bootstrap guidance is not applicable in this repository.
 3. Read `references/_sections.md`, then load only the reference files that match the task.
 4. Make the packaging model explicit before creating or refactoring the app. Default to packaged for Store-like product workflows and Visual Studio deploy/F5 flows. Default to unpackaged when the user expects repeatable CLI build-and-run loops or direct `.exe` launches after each change.
 5. When the task is an opaque XAML compiler failure such as `MSB3073` or `XamlCompiler.exe`, read `references/foundation-template-first-recovery.md` and simplify back toward the current `dotnet new winui` scaffold for the chosen packaging model before inventing custom recovery structure.

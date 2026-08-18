@@ -3,6 +3,10 @@ name: appkit-code-review
 description: "Use when reviewing native macOS AppKit Swift code before committing — checks MVC/MVVM, Swift 6 concurrency and main-actor correctness, memory management (retain cycles), target-action vs bindings, accessibility, theming, security, and performance, catching issues the compiler and UI tests won't find."
 ---
 
+## Mandatory md4a override
+
+Before following this skill, read [`../md4a-skill-policy/SKILL.md`](../md4a-skill-policy/SKILL.md). The md4a policy and repository conventions override conflicting upstream instructions. Do not install tools, run remote installers or `sudo`, add frameworks, scaffold a replacement project, execute signing/upload helpers, publish, or make system-level changes unless the user explicitly approved that action.
+
 ### When to Use
 
 Run a code review **after the app builds and before committing**. This catches quality issues that aren't build errors and aren't visible in UI tests — patterns that compile and run but are wrong, fragile, or slow.

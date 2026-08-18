@@ -3,6 +3,10 @@ name: appkit-packaging
 description: "Code signing, notarization, and distribution for native macOS AppKit apps — release builds, Developer ID signing (codesign), notarization (notarytool), stapling, building signed .dmg / .pkg installers, GitHub Actions CI, TestFlight beta distribution, and Mac App Store submission. Use when preparing a release, signing an app, notarizing, creating an installer, setting up CI packaging, distributing a beta via TestFlight, or publishing to the Mac App Store."
 ---
 
+## Mandatory md4a override
+
+Before following this skill, read [`../md4a-skill-policy/SKILL.md`](../md4a-skill-policy/SKILL.md). The md4a policy and repository conventions override conflicting upstream instructions. Do not install tools, run remote installers or `sudo`, add frameworks, scaffold a replacement project, execute signing/upload helpers, publish, or make system-level changes unless the user explicitly approved that action.
+
 ### Distribution paths
 
 macOS has a few distinct release pipelines — pick first:

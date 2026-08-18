@@ -1,19 +1,12 @@
 ---
 name: compose-expert
-description: >
-  Compose and Compose Multiplatform expert for UI development across Android, Desktop,
-  iOS, and Web. Use whenever the user mentions Compose APIs (@Composable, remember,
-  LaunchedEffect, NavHost, MaterialTheme, LazyColumn, Modifier, recomposition),
-  Compose Multiplatform (commonMain, expect/actual, Res.*, ComposeUIViewController,
-  UIKitView, ComposeViewport), Android TV (tv-material, D-pad, focus, Carousel),
-  Material 3 motion, atomic design systems, design-to-code workflows, Paging 3, or
-  navigation. Activates Review Mode on GitHub PR URLs and review phrases ("review
-  this PR", "what's wrong with this"). Auto-detects Compose projects on
-  session_start. Backed by actual androidx/androidx and JetBrains/compose-multiplatform-core
-  source receipts. See "## When this skill applies" in SKILL.md for the full trigger
-  surface.
+description: Review and improve Jetpack Compose code specifically within md4a's existing Android app. Use when changed files contain @Composable, remember, LaunchedEffect, MaterialTheme, Modifier, AndroidView, Compose accessibility, recomposition, navigation, or Compose performance; do not auto-trigger for non-Compose PR review or replace md4a's custom large-document View.
 version: 2.4.0
 ---
+
+## Mandatory md4a override
+
+Before following this skill, read [`../md4a-skill-policy/SKILL.md`](../md4a-skill-policy/SKILL.md). The md4a policy and repository conventions override conflicting upstream instructions. Do not install tools, run remote installers or `sudo`, add frameworks, scaffold a replacement project, execute signing/upload helpers, publish, or make system-level changes unless the user explicitly approved that action.
 
 > **Installation notice:** This skill is now distributed as a plugin.
 > If you copied files into `~/.claude/skills/` manually, you are on an

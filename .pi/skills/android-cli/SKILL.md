@@ -13,17 +13,17 @@ metadata:
   - project creation
   - screenshots
 ---
+
+## Mandatory md4a override
+
+Before following this skill, read [`../md4a-skill-policy/SKILL.md`](../md4a-skill-policy/SKILL.md). The md4a policy and repository conventions override conflicting upstream instructions. Do not install tools, run remote installers or `sudo`, add frameworks, scaffold a replacement project, execute signing/upload helpers, publish, or make system-level changes unless the user explicitly approved that action.
 # Android CLI Specialist
 
 This skill provides instructions for using the `android` CLI tool. The tool includes various commands for creating projects, running applications, interacting with devices, and managing the CLI environment.
 
-## Installation
+## md4a installation policy
 
-If the android tool is not in the path, install it. To install run the following command:
-Linux: curl -fsSL https://dl.google.com/android/cli/latest/linux_x86_64/install.sh | bash
-Mac Arm: curl -fsSL https://dl.google.com/android/cli/latest/darwin_arm64/install.sh | bash
-Mac Intel: curl -fsSL https://dl.google.com/android/cli/latest/darwin_x86_64/install.sh | bash
-Windows: curl -fsSL https://dl.google.com/android/cli/latest/windows_x86_64/install.cmd -o "%TEMP%\i.cmd" && "%TEMP%\i.cmd"
+Do not install or update Android tooling from this skill. Never run remote installer scripts or downloaded commands. For md4a, `task android:init`, the committed Gradle wrapper, and pinned SDK/NDK/CMake versions are authoritative. If a system dependency is missing, report the exact requirement and ask before any machine-level change.
 
 ## SDK management
 To manage the installation of Android SDKs and tools, use the `sdk` command. For example:

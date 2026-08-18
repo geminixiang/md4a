@@ -12,12 +12,13 @@ Pinned on 2026-08-18.
 | `appkit-packaging` | https://github.com/markmals/mac-dev-skills/tree/9bfc1cf6cedf63ff301d8d73a268a1aae03b2ed5/plugins/appkit/skills/appkit-packaging | `9bfc1cf6cedf63ff301d8d73a268a1aae03b2ed5` | MIT |
 | `appkit-code-review` | https://github.com/markmals/mac-dev-skills/tree/9bfc1cf6cedf63ff301d8d73a268a1aae03b2ed5/plugins/appkit/skills/appkit-code-review | `9bfc1cf6cedf63ff301d8d73a268a1aae03b2ed5` | MIT |
 | `appkit-dev-workflow` | https://github.com/markmals/mac-dev-skills/tree/9bfc1cf6cedf63ff301d8d73a268a1aae03b2ed5/plugins/appkit/skills/appkit-dev-workflow | `9bfc1cf6cedf63ff301d8d73a268a1aae03b2ed5` | MIT |
+| `md4a-skill-policy` | This repository | project-owned | MIT |
 | `md4a-linux-native` | This repository | project-owned | MIT |
 
 Update procedure:
 
 1. inspect upstream history and the complete skill/reference diff;
 2. audit scripts and remote-command instructions;
-3. copy only the selected skill directory and license;
+3. copy only the selected skill directory and license; do not vendor executable setup/signing/upload helpers;
 4. update this table;
 5. run project build/test gates before committing.

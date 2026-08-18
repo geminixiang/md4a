@@ -3,6 +3,10 @@ name: appkit-modern-input
 description: Use when modernizing input handling in a macOS AppKit app — overriding mouseDown:/rightMouseDown:, hand-rolling mouse tracking loops with nextEvent(matching:), wiring selection / context menus / drag-and-drop by hand, fixing a control that won't respond to clicks (overlapping sibling views), broken Tab key-view navigation, or NSStatusItem status-bar items with a custom view or window. Targets modern macOS (macOS 26/27).
 ---
 
+## Mandatory md4a override
+
+Before following this skill, read [`../md4a-skill-policy/SKILL.md`](../md4a-skill-policy/SKILL.md). The md4a policy and repository conventions override conflicting upstream instructions. Do not install tools, run remote installers or `sudo`, add frameworks, scaffold a replacement project, execute signing/upload helpers, publish, or make system-level changes unless the user explicitly approved that action.
+
 # Modernizing AppKit Input Handling
 
 ## Overview

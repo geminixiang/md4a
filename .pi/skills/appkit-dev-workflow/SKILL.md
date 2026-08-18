@@ -1,7 +1,11 @@
 ---
 name: appkit-dev-workflow
-description: "Build and run workflow for native macOS AppKit apps — project creation with Tuist, the build-and-run.sh helper, xcodebuild, launching the .app, reading stdout/crash logs, error diagnosis, and prerequisites. Use when building, running, or fixing build errors in an AppKit / Swift / Cocoa project."
+description: "Review and operate md4a's existing macOS AppKit/UIKit interop build, test, launch, and diagnostic workflow. Use for platform/apple native editor, input, windowing, or workflow tasks; preserve XcodeGen/project.yml and use repository Task commands rather than scaffolding Tuist or running bundled setup scripts."
 ---
+
+## Mandatory md4a override
+
+Before following this skill, read [`../md4a-skill-policy/SKILL.md`](../md4a-skill-policy/SKILL.md). The md4a policy and repository conventions override conflicting upstream instructions. Do not install tools, run remote installers or `sudo`, add frameworks, scaffold a replacement project, execute signing/upload helpers, publish, or make system-level changes unless the user explicitly approved that action.
 
 ### Create or Open a Project
 

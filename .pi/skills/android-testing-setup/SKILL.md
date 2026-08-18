@@ -15,6 +15,10 @@ metadata:
   - coverage
 ---
 
+## Mandatory md4a override
+
+Before following this skill, read [`../md4a-skill-policy/SKILL.md`](../md4a-skill-policy/SKILL.md). The md4a policy and repository conventions override conflicting upstream instructions. Do not install tools, run remote installers or `sudo`, add frameworks, scaffold a replacement project, execute signing/upload helpers, publish, or make system-level changes unless the user explicitly approved that action.
+
 ## Step 1: analyze the current testing setup
 
 To understand the testing setup of an existing project, look for these dependencies in the libs.versions.toml file, or build files:
