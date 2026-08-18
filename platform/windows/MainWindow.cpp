@@ -193,11 +193,13 @@ class MainWindowImpl final : public md4a::windows::MainWindow {
   void PromptForDefaultApp() override {
     if (HasAskedAboutDefaults()) return;
     auto content = m_window.Content();
-    if (content && content.XamlRoot()) {
+    auto frameworkContent = content.try_as<FrameworkElement>();
+    if (frameworkContent && frameworkContent.XamlRoot()) {
       PromptForDefaultAppAsync();
       return;
     }
-    content.Loaded([this](IInspectable const&, RoutedEventArgs const&) {
+    if (!frameworkContent) return;
+    frameworkContent.Loaded([this](IInspectable const&, RoutedEventArgs const&) {
       PromptForDefaultAppAsync();
     });
   }
