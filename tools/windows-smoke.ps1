@@ -41,9 +41,9 @@ function Wait-ForWindow([System.Diagnostics.Process]$Process, [string]$ExpectedT
         do {
             Start-Sleep -Milliseconds 250
             $Process.Refresh()
-        } until ($Process.MainWindowTitle -like "*$ExpectedTitle*" -or (Get-Date) -ge $TitleDeadline)
-        if ($Process.MainWindowTitle -notlike "*$ExpectedTitle*") {
-            throw "md4a window title did not contain '$ExpectedTitle' (actual: '$($Process.MainWindowTitle)')."
+        } until ($Process.MainWindowTitle -eq $ExpectedTitle -or (Get-Date) -ge $TitleDeadline)
+        if ($Process.MainWindowTitle -ne $ExpectedTitle) {
+            throw "md4a window title was not '$ExpectedTitle' (actual: '$($Process.MainWindowTitle)')."
         }
     }
 }
@@ -55,7 +55,7 @@ try {
     if (-not (Test-Path $AppPath)) { throw "Installed executable was not found: $AppPath" }
 
     $App = Start-Process -FilePath $AppPath -PassThru
-    Wait-ForWindow $App
+    Wait-ForWindow $App "Untitled.md — md4a"
     Start-Sleep -Seconds 5
     $App.Refresh()
     if ($App.HasExited) { throw "md4a exited before the five-second survival gate." }
@@ -64,7 +64,7 @@ try {
     Remove-ItemProperty -Path "HKCU:\Software\md4a" -Name "AskedAboutDefaults" -ErrorAction SilentlyContinue
     Remove-Item Env:MD4A_SKIP_DEFAULT_APP_PROMPT -ErrorAction SilentlyContinue
     $PromptApp = Start-Process -FilePath $AppPath -PassThru
-    Wait-ForWindow $PromptApp
+    Wait-ForWindow $PromptApp "Untitled.md — md4a"
     Start-Sleep -Seconds 5
     $PromptApp.Refresh()
     if ($PromptApp.HasExited) { throw "md4a exited while showing the default-app prompt." }
@@ -79,7 +79,7 @@ try {
     $Fixture = Join-Path $env:RUNNER_TEMP "md4a-smoke.md"
     Set-Content -Path $Fixture -Value "# Windows activation smoke`r`n`r`nUTF-8 中文 🚀" -Encoding utf8
     $ActivatedApp = Start-Process -FilePath $AppPath -ArgumentList $Fixture -PassThru
-    Wait-ForWindow $ActivatedApp "md4a-smoke.md"
+    Wait-ForWindow $ActivatedApp "md4a-smoke.md — md4a"
     Start-Sleep -Seconds 2
     $ActivatedApp.Refresh()
     if ($ActivatedApp.HasExited) { throw "md4a file-activation process did not survive." }

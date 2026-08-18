@@ -75,13 +75,14 @@ class MainWindowImpl final : public md4a::windows::MainWindow {
  public:
   MainWindowImpl() {
     md4a::startup::Log("window.construct.begin");
-    m_window.Title(L"md4a — Untitled");
+    m_window.Title(L"Untitled.md — md4a");
     md4a::startup::Log("window.title.complete");
     BuildUi();
     md4a::startup::Log("window.ui.complete");
     m_editor.Text(L"# Untitled\r\n\r\n");
     md4a::startup::Log("window.initial-text.complete");
     m_dirty = false;
+    UpdateTitle();
     m_window.Activate();
     md4a::startup::Log("window.activate.complete");
     InitializePreview();
@@ -312,10 +313,11 @@ class MainWindowImpl final : public md4a::windows::MainWindow {
   }
 
   void UpdateTitle() {
-    hstring name = m_file ? m_file.Name() : L"Untitled";
-    std::wstring title = L"md4a — ";
+    hstring name = m_file ? m_file.Name() : L"Untitled.md";
+    std::wstring title;
+    if (m_dirty) title.append(L"• ");
     title.append(name);
-    if (m_dirty) title.append(L" *");
+    title.append(L" — md4a");
     m_window.Title(title);
   }
 

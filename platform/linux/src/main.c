@@ -106,7 +106,7 @@ static void show_error(Editor *editor, const char *heading, const char *detail) 
 }
 
 static void update_title(Editor *editor) {
-  char *name = editor->file == NULL ? g_strdup("Untitled")
+  char *name = editor->file == NULL ? g_strdup("Untitled.md")
                                     : g_file_get_basename(editor->file);
   char *title = g_strdup_printf("%s%s — md4a",
                                 gtk_text_buffer_get_modified(
