@@ -23,7 +23,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -41,6 +44,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -110,6 +117,7 @@ private fun MarkdownScreen(document: DocumentViewModel = viewModel()) {
     val activity = context as? MainActivity
     var pendingReplacement by remember { mutableStateOf<PendingReplacement?>(null) }
     var showDefaultHandlerPrompt by remember { mutableStateOf(false) }
+    var showDocumentMenu by remember { mutableStateOf(false) }
     val defaultHandlerPreferences = remember {
         context.getSharedPreferences(
             DefaultHandlerOnboarding.preferencesName,
@@ -234,22 +242,14 @@ private fun MarkdownScreen(document: DocumentViewModel = viewModel()) {
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
-                title = { Text((if (document.isDirty) "• " else "") + document.title) },
+                title = {
+                    Text(
+                        text = (if (document.isDirty) "• " else "") + document.title,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                },
                 actions = {
-                    TextButton(
-                        onClick = { activity?.openDefaultHandlerSettings() },
-                    ) { Text("Defaults") }
-                    TextButton(
-                        onClick = {
-                            if (document.isDirty) pendingReplacement = PendingReplacement.New
-                            else { document.newDocument(); activity?.showPreviewForTest(false) }
-                        },
-                        enabled = !document.isLoading && !document.isSaving,
-                    ) { Text("New") }
-                    TextButton(
-                        onClick = { openDocument.launch(arrayOf("text/markdown", "text/plain")) },
-                        enabled = !document.isLoading && !document.isSaving,
-                    ) { Text("Open") }
                     TextButton(
                         onClick = {
                             document.documentUri?.let { document.save(context.contentResolver, it) }
@@ -257,6 +257,53 @@ private fun MarkdownScreen(document: DocumentViewModel = viewModel()) {
                         },
                         enabled = !document.isLoading && !document.isSaving,
                     ) { Text(if (document.isSaving) "Saving…" else "Save") }
+                    Box {
+                        IconButton(
+                            onClick = { showDocumentMenu = true },
+                            modifier = Modifier.semantics {
+                                contentDescription = "More options"
+                            },
+                        ) {
+                            Text(
+                                text = "⋮",
+                                modifier = Modifier.clearAndSetSemantics {},
+                                style = MaterialTheme.typography.titleLarge,
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = showDocumentMenu,
+                            onDismissRequest = { showDocumentMenu = false },
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("New document") },
+                                onClick = {
+                                    showDocumentMenu = false
+                                    if (document.isDirty) {
+                                        pendingReplacement = PendingReplacement.New
+                                    } else {
+                                        document.newDocument()
+                                        activity?.showPreviewForTest(false)
+                                    }
+                                },
+                                enabled = !document.isLoading && !document.isSaving,
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Open…") },
+                                onClick = {
+                                    showDocumentMenu = false
+                                    openDocument.launch(arrayOf("text/markdown", "text/plain"))
+                                },
+                                enabled = !document.isLoading && !document.isSaving,
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Markdown defaults") },
+                                onClick = {
+                                    showDocumentMenu = false
+                                    activity?.openDefaultHandlerSettings()
+                                },
+                            )
+                        }
+                    }
                 },
             )
         },
