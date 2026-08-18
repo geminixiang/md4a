@@ -186,7 +186,9 @@ class MainWindowImpl final : public md4a::windows::MainWindow {
     auto text = co_await FileIO::ReadTextAsync(file, Streams::UnicodeEncoding::Utf8);
     m_file = file;
     m_editor.Text(text);
-    m_savedText = text;
+    // TextBox may normalize line endings; compare against the value it retains,
+    // not the StorageFile string supplied to it.
+    m_savedText = m_editor.Text();
     m_dirty = false;
     UpdateTitle();
   }
