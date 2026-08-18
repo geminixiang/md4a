@@ -60,6 +60,17 @@ try {
     $App.Refresh()
     if ($App.HasExited) { throw "md4a exited before the five-second survival gate." }
 
+    Stop-Process -Id $App.Id -Force
+    Remove-ItemProperty -Path "HKCU:\Software\md4a" -Name "AskedAboutDefaults" -ErrorAction SilentlyContinue
+    Remove-Item Env:MD4A_SKIP_DEFAULT_APP_PROMPT -ErrorAction SilentlyContinue
+    $PromptApp = Start-Process -FilePath $AppPath -PassThru
+    Wait-ForWindow $PromptApp
+    Start-Sleep -Seconds 5
+    $PromptApp.Refresh()
+    if ($PromptApp.HasExited) { throw "md4a exited while showing the default-app prompt." }
+    Stop-Process -Id $PromptApp.Id -Force
+    $env:MD4A_SKIP_DEFAULT_APP_PROMPT = "1"
+
     if (-not (Test-Path $StartupLogPath)) { throw "Startup stage log was not created: $StartupLogPath" }
     $StartupLog = Get-Content $StartupLogPath -Raw
     if ($StartupLog -notmatch "startup\.complete") { throw "Startup log did not reach startup.complete." }
@@ -75,7 +86,7 @@ try {
     if (@(Get-NewApplicationCrashes).Count -ne 0) { throw "File activation produced an Application Error Event ID 1000." }
 
     Stop-Process -Id $ActivatedApp.Id -Force
-    Stop-Process -Id $App.Id -Force
+    if (-not $App.HasExited) { Stop-Process -Id $App.Id -Force }
 
     $Uninstaller = Get-ChildItem $InstallDir -Filter "unins*.exe" | Select-Object -First 1
     if (-not $Uninstaller) { throw "Uninstaller was not created." }

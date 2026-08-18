@@ -190,15 +190,27 @@ class MainWindowImpl final : public md4a::windows::MainWindow {
  public:
   void OpenInitialDocument(std::wstring const& path) override { OpenPath(path); }
 
-  void PromptForDefaultApp() override { PromptForDefaultAppAsync(); }
+  void PromptForDefaultApp() override {
+    if (HasAskedAboutDefaults()) return;
+    auto content = m_window.Content();
+    if (content && content.XamlRoot()) {
+      PromptForDefaultAppAsync();
+      return;
+    }
+    content.Loaded([this](IInspectable const&, RoutedEventArgs const&) {
+      PromptForDefaultAppAsync();
+    });
+  }
 
  private:
   fire_and_forget PromptForDefaultAppAsync() {
     if (HasAskedAboutDefaults()) co_return;
+    auto content = m_window.Content();
+    if (!content || !content.XamlRoot()) co_return;
     RecordDefaultsPrompt();
 
     ContentDialog dialog;
-    dialog.XamlRoot(m_window.Content().XamlRoot());
+    dialog.XamlRoot(content.XamlRoot());
     dialog.Title(box_value(L"Open Markdown files with md4a?"));
     dialog.Content(box_value(L"Windows controls default apps. Open Settings to choose md4a for .md and .markdown files?"));
     dialog.PrimaryButtonText(L"Open Settings");

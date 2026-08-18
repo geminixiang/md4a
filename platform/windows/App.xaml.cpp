@@ -48,11 +48,11 @@ void App::OnLaunched(Microsoft::UI::Xaml::LaunchActivatedEventArgs const&) {
     md4a::startup::Log("document.open-requested");
   }
 
+  md4a::startup::Log("startup.complete");
   wchar_t skipPrompt[2]{};
   if (GetEnvironmentVariableW(L"MD4A_SKIP_DEFAULT_APP_PROMPT", skipPrompt, 2) == 0) {
     m_window->PromptForDefaultApp();
   }
-  md4a::startup::Log("startup.complete");
 }
 
 }  // namespace winrt::Md4a::implementation
