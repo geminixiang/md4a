@@ -3,6 +3,7 @@ package app.md4a
 import android.app.Application
 import android.content.ContentResolver
 import android.net.Uri
+import android.provider.OpenableColumns
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -101,17 +102,17 @@ class DocumentViewModel(application: Application) : AndroidViewModel(application
         errorMessage = null
         openJob = viewModelScope.launch {
             try {
-                val loaded = withContext(Dispatchers.IO) {
+                val (loaded, name) = withContext(Dispatchers.IO) {
                     val text = resolver.openInputStream(uri)?.use { input ->
                         val decoder = StandardCharsets.UTF_8.newDecoder()
                             .onMalformedInput(CodingErrorAction.REPORT)
                             .onUnmappableCharacter(CodingErrorAction.REPORT)
                         InputStreamReader(input, decoder).use { it.readText().removePrefix("\uFEFF") }
                     } ?: throw IOException("Unable to open document")
-                    DocumentSession(text)
+                    DocumentSession(text) to displayName(resolver, uri, "Document.md")
                 }
                 if (generation != openGeneration) return@launch
-                replaceSession(loaded, uri, displayName(uri, "Document.md"), clearDraft = false)
+                replaceSession(loaded, uri, name, clearDraft = false)
                 errorMessage = null
             } catch (cancelled: CancellationException) {
                 throw cancelled
@@ -133,16 +134,17 @@ class DocumentViewModel(application: Application) : AndroidViewModel(application
         errorMessage = null
         viewModelScope.launch {
             try {
-                withContext(Dispatchers.IO) {
+                val name = withContext(Dispatchers.IO) {
                     resolver.openOutputStream(uri, "wt")?.use { output ->
                         OutputStreamWriter(output, StandardCharsets.UTF_8).buffered().use(snapshot.document::appendTo)
                     } ?: throw IOException("Unable to save document")
+                    displayName(resolver, uri, title)
                 }
                 if (session === savingSession && sessionToken == savingToken &&
                     savingSession.markSavedIfRevision(snapshot.revision)
                 ) {
                     documentUri = uri
-                    title = displayName(uri, title)
+                    title = name
                     syncSessionState()
                     invalidateAndClearDraft()
                 }
@@ -237,8 +239,24 @@ class DocumentViewModel(application: Application) : AndroidViewModel(application
         openGeneration++
     }
 
-    private fun displayName(uri: Uri, fallback: String): String =
-        uri.lastPathSegment?.substringAfterLast('/')?.takeIf(String::isNotBlank) ?: fallback
+    private fun displayName(resolver: ContentResolver, uri: Uri, fallback: String): String {
+        val providerName = try {
+            resolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
+                val column = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                if (column >= 0 && cursor.moveToFirst() && !cursor.isNull(column)) {
+                    cursor.getString(column)?.takeIf(String::isNotBlank)
+                } else {
+                    null
+                }
+            }
+        } catch (_: RuntimeException) {
+            null
+        }
+        return providerName
+            ?: uri.takeUnless { it.scheme == ContentResolver.SCHEME_CONTENT }
+                ?.lastPathSegment?.substringAfterLast('/')?.takeIf(String::isNotBlank)
+            ?: fallback
+    }
 
     private fun newToken(): String = UUID.randomUUID().toString()
 

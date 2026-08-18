@@ -14,8 +14,7 @@ class BenchmarkDocumentProvider : ContentProvider() {
     override fun onCreate(): Boolean = true
 
     override fun openFile(uri: Uri, mode: String): ParcelFileDescriptor {
-        val name = uri.lastPathSegment?.takeIf { it.matches(Regex("[A-Za-z0-9._-]+")) }
-            ?: throw IllegalArgumentException("Invalid test document name")
+        val name = storageName(uri)
         val file = File(requireNotNull(context).filesDir, name)
         val flags = if (mode.contains('w')) {
             file.parentFile?.mkdirs()
@@ -27,9 +26,22 @@ class BenchmarkDocumentProvider : ContentProvider() {
     override fun getType(uri: Uri): String = "text/markdown"
     override fun query(uri: Uri, projection: Array<out String>?, selection: String?, selectionArgs: Array<out String>?, sortOrder: String?): Cursor {
         val columns = projection ?: arrayOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE)
-        val file = File(requireNotNull(context).filesDir, requireNotNull(uri.lastPathSegment))
-        return MatrixCursor(columns).apply { addRow(columns.map { if (it == OpenableColumns.SIZE) file.length() else file.name }) }
+        val file = File(requireNotNull(context).filesDir, storageName(uri))
+        val displayName = uri.getQueryParameter("displayName") ?: file.name
+        return MatrixCursor(columns).apply {
+            addRow(columns.map {
+                when (it) {
+                    OpenableColumns.SIZE -> file.length()
+                    OpenableColumns.DISPLAY_NAME -> displayName
+                    else -> null
+                }
+            })
+        }
     }
+
+    private fun storageName(uri: Uri): String =
+        uri.lastPathSegment?.replace(':', '_')?.takeIf { it.matches(Regex("[A-Za-z0-9._-]+")) }
+            ?: throw IllegalArgumentException("Invalid test document name")
     override fun insert(uri: Uri, values: ContentValues?): Uri? = null
     override fun delete(uri: Uri, selection: String?, selectionArgs: Array<out String>?): Int = 0
     override fun update(uri: Uri, values: ContentValues?, selection: String?, selectionArgs: Array<out String>?): Int = 0

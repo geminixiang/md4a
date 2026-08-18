@@ -64,6 +64,20 @@ class ProductionDocumentLifecycleTest {
         }
     }
 
+    @Test(timeout = 120_000) fun providerDisplayNameWinsOverOpaqueDocumentId() {
+        val uri = Uri.parse("content://app.md4a.benchmark.documents/document%3A100001?displayName=README.md")
+        write(uri, "# Display name\n".toByteArray())
+
+        launch(uri).use { scenario ->
+            waitFor("provider display name") {
+                activity(scenario) { !it.document.isLoading && !it.document.isRestoring }
+            }
+            scenario.onActivity { activity ->
+                org.junit.Assert.assertEquals("README.md", activity.document.title)
+            }
+        }
+    }
+
     @Test(timeout = 120_000) fun dirtyDraftRecoversWithoutUiAutomationTextDump() {
         val original = "draft base\r\n".toByteArray()
         val uri = Uri.parse("content://app.md4a.benchmark.documents/draft.md")
